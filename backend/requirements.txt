@@ -1,2 +1,8 @@
 fastapi
 uvicorn
+requests
+beautifulsoup4
+passlib[bcrypt]
+python-jose[cryptography]
+python-multipart
+sqlalchemy
