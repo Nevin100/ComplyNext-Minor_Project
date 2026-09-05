@@ -10,6 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.rules_engine.npa_engine import LoanAccount, AccountType, run_batch
+from src.api.auth_routes import router as auth_router
 
 app = FastAPI(title="ComplyNext API")
 
@@ -21,6 +22,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(auth_router)
 
 # Same sample accounts as the test script - reused here so the API
 # has something to return. In Phase 2's later days this will be replaced
@@ -34,7 +37,6 @@ SAMPLE_ACCOUNTS = [
     LoanAccount("LN006", "Om Sai Constructions", AccountType.TERM_LOAN, 120, 900000, "NPA"),
     LoanAccount("LN007", "Metro Cash & Carry", AccountType.REVOLVING, 65, 700000, "SMA-1"),
 ]
-
 
 @app.get("/")
 def health_check():
