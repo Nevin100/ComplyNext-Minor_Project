@@ -58,4 +58,4 @@ def decode_access_token(token: str) -> dict:
     user_id/company_id from an incoming request's token.
     Raises an exception automatically if the token is invalid or expired.
     """
-    return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]
+    return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
