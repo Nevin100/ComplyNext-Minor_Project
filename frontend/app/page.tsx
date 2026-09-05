@@ -1,69 +1,138 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useState } from "react";
+import axios from "axios";
+
+interface ClassificationResult {
+  account_id: string;
+  borrower_name: string;
+  days_past_due: number;
+  computed_classification: string;
+  existing_classification: string;
+  is_misclassified: boolean;
+  reasoning: string;
+}
+
+const statusColor: Record<string, string> = {
+  "Standard": "bg-green-100 text-green-800",
+  "SMA-0": "bg-yellow-100 text-yellow-800",
+  "SMA-1": "bg-orange-100 text-orange-800",
+  "SMA-2": "bg-orange-200 text-orange-900",
+  "NPA": "bg-red-100 text-red-800",
+  "Substandard": "bg-red-200 text-red-900",
+  "Doubtful": "bg-purple-100 text-purple-800",
+  "Loss": "bg-gray-800 text-white",
+};
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+export default function Dashboard() {
+  const [results, setResults] = useState<ClassificationResult[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchClassifications = async () => {
+      try {
+        setLoading(true);
+        const res = await axios.get(`${API_BASE_URL}/api/classify`);
+        setResults(res.data);
+      } catch (err) {
+        console.error("Failed to fetch classification data:", err);
+        setError("Unable to connect to the classification service.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchClassifications();
+  }, []);
+
+  const misclassifiedCount = results.filter((r) => r.is_misclassified).length;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="min-h-screen bg-gray-50 p-8">
+      <header className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">ComplyNext Dashboard</h1>
+        <p className="text-gray-600 mt-1">NPA / Asset Classification Engine — live results</p>
+      </header>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-100">
+          <p className="text-sm font-medium text-gray-500">Total Accounts</p>
+          <p className="text-3xl font-bold text-gray-900 mt-1">{loading ? "..." : results.length}</p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-100">
+          <p className="text-sm font-medium text-gray-500">Misclassified Accounts</p>
+          <p className="text-3xl font-bold text-red-600 mt-1">{loading ? "..." : misclassifiedCount}</p>
         </div>
-      </main>
-    </div>
+      </div>
+
+      {/* Main Table Container */}
+      <div className="mt-6 bg-white rounded-lg shadow border border-gray-100 overflow-hidden">
+        <div className="p-4 border-b border-gray-200 bg-gray-50/50 flex justify-between items-center">
+          <h2 className="font-semibold text-gray-800">Loan Accounts</h2>
+          <span className="text-xs text-gray-500">Auto-refreshed via FastAPI</span>
+        </div>
+
+        {loading ? (
+          <div className="p-8 text-center text-gray-500">Loading classification engine...</div>
+        ) : error ? (
+          <div className="p-8 text-center text-red-600 font-medium">{error}</div>
+        ) : results.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">No loan account records found.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
+                <tr>
+                  <th className="p-3">Account ID</th>
+                  <th className="p-3">Borrower</th>
+                  <th className="p-3">DPD</th>
+                  <th className="p-3">Computed</th>
+                  <th className="p-3">Existing</th>
+                  <th className="p-3">Status</th>
+                  <th className="p-3">Reasoning</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {results.map((r) => {
+                  const badgeClass = statusColor[r.computed_classification] || "bg-gray-100 text-gray-800";
+                  
+                  return (
+                    <tr key={r.account_id} className="hover:bg-gray-50 transition-colors">
+                      <td className="p-3 font-mono text-xs text-gray-700">{r.account_id}</td>
+                      <td className="p-3 font-medium text-gray-900">{r.borrower_name}</td>
+                      <td className="p-3">{r.days_past_due}</td>
+                      <td className="p-3">
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${badgeClass}`}>
+                          {r.computed_classification}
+                        </span>
+                      </td>
+                      <td className="p-3 text-gray-500">{r.existing_classification}</td>
+                      <td className="p-3">
+                        {r.is_misclassified ? (
+                          <span className="inline-flex items-center gap-1 text-red-600 font-semibold bg-red-50 px-2 py-0.5 rounded border border-red-200 text-xs">
+                            Mismatch
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-green-600 font-medium bg-green-50 px-2 py-0.5 rounded border border-green-200 text-xs">
+                            OK
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-3 text-xs text-gray-500 max-w-xs truncate" title={r.reasoning}>
+                        {r.reasoning || "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </main>
   );
 }
