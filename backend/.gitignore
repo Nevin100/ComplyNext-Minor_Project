@@ -1,0 +1,29 @@
+# Python virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# uv lock file - KEEP this actually, don't ignore it
+# (see note below)
+
+# Environment variables / secrets
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Data files (scraped circulars, sample CSVs) - agar bade files ya sensitive data ho
+# data/*.csv
+# data/scraped_circulars/
+
+# Logs
+*.log
