@@ -6,11 +6,15 @@ This file's only job right now is to expose the NPA rule engine
 frontend can fetch classification results over the network.
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
 
 from src.rules_engine.npa_engine import LoanAccount, AccountType, run_batch
 from src.api.auth_routes import router as auth_router
+from src.db.database import get_db
+from src.db.models import LoanAccount as DBLoanAccount
+from src.auth.dependencies import get_current_user
 
 app = FastAPI(title="ComplyNext API")
 
@@ -25,19 +29,6 @@ app.add_middleware(
 
 app.include_router(auth_router)
 
-# Same sample accounts as the test script - reused here so the API
-# has something to return. In Phase 2's later days this will be replaced
-# by accounts parsed from an uploaded CSV instead of being hardcoded.
-SAMPLE_ACCOUNTS = [
-    LoanAccount("LN001", "Ramesh Traders", AccountType.TERM_LOAN, 0, 250000, "Standard"),
-    LoanAccount("LN002", "Sunita Enterprises", AccountType.TERM_LOAN, 22, 180000, "Standard"),
-    LoanAccount("LN003", "Verma Textiles", AccountType.TERM_LOAN, 45, 500000, "SMA-1"),
-    LoanAccount("LN004", "Global Auto Spares", AccountType.TERM_LOAN, 75, 320000, "SMA-1"),
-    LoanAccount("LN005", "Krishna Dairy Farm", AccountType.TERM_LOAN, 95, 150000, "SMA-2"),
-    LoanAccount("LN006", "Om Sai Constructions", AccountType.TERM_LOAN, 120, 900000, "NPA"),
-    LoanAccount("LN007", "Metro Cash & Carry", AccountType.REVOLVING, 65, 700000, "SMA-1"),
-]
-
 @app.get("/")
 def health_check():
     """Simple endpoint to confirm the server is alive."""
@@ -45,11 +36,33 @@ def health_check():
 
 
 @app.get("/api/classify")
-def get_classifications():
+def get_classifications(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
     """
-    Runs the rule engine on the sample accounts and returns results as JSON.
-    r.__dict__ converts each ClassificationResult dataclass into a plain
-    dict, because FastAPI needs plain dicts/lists to serialize as JSON.
+    Protected endpoint - requires a valid JWT (Authorization: Bearer <token>).
+    Fetches ONLY the loan accounts belonging to the logged-in user's company -
+    this filter is the entire mechanism behind multi-tenant data isolation.
     """
-    results = run_batch(SAMPLE_ACCOUNTS)
+
+    db_accounts = (
+        db.query(DBLoanAccount)
+        .filter(DBLoanAccount.company_id == current_user["company_id"])
+        .all()
+    )
+
+    accounts_for_engine = [
+        LoanAccount(
+            account_id=acc.account_id,
+            borrower_name=acc.borrower_name,
+            account_type=AccountType(acc.account_type),
+            days_past_due=acc.days_past_due,
+            outstanding_amount=acc.outstanding_amount,
+            existing_classification=acc.existing_classification,
+        )
+        for acc in db_accounts
+    ]
+
+    results = run_batch(accounts_for_engine)
     return [r.__dict__ for r in results]
