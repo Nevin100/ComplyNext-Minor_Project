@@ -15,6 +15,9 @@ from src.api.auth_routes import router as auth_router
 from src.db.database import get_db
 from src.db.models import LoanAccount as DBLoanAccount
 from src.auth.dependencies import get_current_user
+from src.embeddings.vector_store import semantic_search
+from src.schemas.search import CircularSearchResult
+from src.api.loan_routes import router as loan_router
 
 app = FastAPI(title="ComplyNext API")
 
@@ -28,6 +31,7 @@ app.add_middleware(
 )
 
 app.include_router(auth_router)
+app.include_router(loan_router)
 
 @app.get("/")
 def health_check():
@@ -66,3 +70,31 @@ def get_classifications(
 
     results = run_batch(accounts_for_engine)
     return [r.__dict__ for r in results]
+
+@app.get("/api/search-circulars", response_model=list[CircularSearchResult])
+def search_circulars(
+    query: str,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    RAG retrieval endpoint - takes a natural language question about
+    RBI regulations and returns the most semantically relevant circular
+    chunks, with source citations. This is the retrieval half of the
+    Policy Gap Detection pipeline (the comparison/generation half comes
+    in Phase 3 with the LangGraph agent).
+
+    Not filtered by company_id - RBI circulars are shared regulatory
+    knowledge, not tenant-specific data, so every logged-in user can
+    query the same knowledge base.
+    """
+    results = semantic_search(query, top_k=3)
+
+    return [
+        CircularSearchResult(
+            source_name=meta["source_name"],
+            source_url=meta["source_url"],
+            chunk_index=meta["chunk_index"],
+            text=doc,
+        )
+        for doc, meta in zip(results["documents"][0], results["metadatas"][0])
+    ]
