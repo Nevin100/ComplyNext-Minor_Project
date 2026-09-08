@@ -10,8 +10,6 @@ from sqlalchemy import Column, Integer, String, Float, ForeignKey
 from sqlalchemy.orm import relationship
 
 from src.db.database import Base
-
-
 class Company(Base):
     """
     Represents one tenant (e.g. an NBFC or co-operative bank).
@@ -27,7 +25,6 @@ class Company(Base):
     users = relationship("User", back_populates="company")
     loan_accounts = relationship("LoanAccount", back_populates="company")
 
-
 class User(Base):
     """
     A login account. Linked to exactly one company via company_id -
@@ -41,7 +38,6 @@ class User(Base):
 
     company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
     company = relationship("Company", back_populates="users")
-
 
 class LoanAccount(Base):
     """
@@ -61,3 +57,19 @@ class LoanAccount(Base):
 
     company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
     company = relationship("Company", back_populates="loan_accounts")
+
+class Circular(Base):
+    """
+    Stores one CHUNK of a scraped RBI circular - not the whole document
+    in one row. Splitting into chunks now (at storage time) means later
+    the embedding step can embed and retrieve at chunk granularity,
+    which is what makes RAG retrieval precise (return the relevant
+    paragraph, not the entire 200-page circular).
+    """
+    __tablename__ = "circulars"
+
+    id = Column(Integer, primary_key=True, index=True)
+    source_name = Column(String, nullable=False)     # e.g. "IRACP_MASTER_CIRCULAR"
+    source_url = Column(String, nullable=False)       # original RBI link - needed for citations
+    chunk_index = Column(Integer, nullable=False)      # position of this chunk within the document
+    chunk_text = Column(String, nullable=False)

@@ -7,6 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "bcrypt==4.0.1",
     "beautifulsoup4>=4.15.0",
+    "chromadb>=1.5.9",
     "fastapi>=0.141.1",
     "passlib[bcrypt]>=1.7.4",
     "pydantic[email]>=2.13.5",
@@ -14,6 +15,7 @@ dependencies = [
     "python-jose[cryptography]>=3.5.0",
     "python-multipart>=0.0.32",
     "requests>=2.34.2",
+    "sentence-transformers>=6.0.1",
     "sqlalchemy>=2.0.52",
     "uvicorn>=0.52.4",
 ]
