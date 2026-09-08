@@ -16,8 +16,10 @@ from src.db.database import get_db
 from src.db.models import LoanAccount as DBLoanAccount
 from src.auth.dependencies import get_current_user
 from src.embeddings.vector_store import semantic_search
+
 from src.schemas.search import CircularSearchResult
 from src.api.loan_routes import router as loan_router
+from src.api.company_routes import router as company_router
 
 app = FastAPI(title="ComplyNext API")
 
@@ -32,6 +34,8 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(loan_router)
+app.include_router(company_router)
+
 
 @app.get("/")
 def health_check():

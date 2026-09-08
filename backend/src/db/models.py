@@ -6,8 +6,9 @@ Relationships (ForeignKey) are how we link a user/loan account to a specific
 company - this linkage is the entire mechanism behind data isolation.
 """
 
-from sqlalchemy import Column, Integer, String, Float, ForeignKey
 from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime
+from sqlalchemy.sql import func
 
 from src.db.database import Base
 class Company(Base):
@@ -19,7 +20,7 @@ class Company(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, nullable=False)
-
+    created_at = Column(DateTime(timezone=True), server_default=func.now())   # NEW
     # relationship() doesn't create a DB column - it's a convenience so that
     # in Python we can do `company.users` to get all users of that company.
     users = relationship("User", back_populates="company")
