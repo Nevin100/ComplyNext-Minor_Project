@@ -1,27 +1,32 @@
 """
 ComplyNext - Reusable FastAPI dependency to extract the current user's
-identity from a JWT token. Any protected route can just add
-`current_user: dict = Depends(get_current_user)` as a parameter, and
-FastAPI will automatically run this check before the route's own code runs.
+identity from a JWT token.
+
+Using HTTPBearer (not OAuth2PasswordBearer) because our /auth/login
+endpoint accepts JSON (email/password), not an OAuth2 form login -
+HTTPBearer just expects a raw token in the Authorization header,
+which matches how our frontend will actually send it.
 """
 
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError
 
 from src.auth.security import decode_access_token
 
-# This tells FastAPI's auto-docs (/docs) that clients should send the
-# token via "Authorization: Bearer <token>" header, and it points to
-# our /login route as the place to obtain that token.
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+security_scheme = HTTPBearer()
 
-def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
+
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security_scheme),
+) -> dict:
     """
     Runs automatically before any route that depends on it.
-    Decodes the JWT and returns {user_id, company_id} - or raises a
-    401 error if the token is missing, invalid, or expired.
+    Extracts the token from "Authorization: Bearer <token>", decodes it,
+    and returns {user_id, company_id} - or raises 401 if invalid/expired.
     """
+    token = credentials.credentials   # this pulls out just the raw token string
+
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
