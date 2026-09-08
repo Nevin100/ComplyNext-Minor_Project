@@ -11,6 +11,7 @@ import requests
 from bs4 import BeautifulSoup
 from src.db.database import SessionLocal
 from src.db.models import Circular
+from datetime import datetime, timezone   # add this import at the top of the file
 import re
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; ComplyNextBot/1.0)"}
@@ -95,13 +96,15 @@ def save_chunks_to_db(source_name: str, url: str, chunks: list[str]) -> None:
     try:
         # Remove old chunks for this source before inserting fresh ones.
         db.query(Circular).filter(Circular.source_name == source_name).delete()
-
+        now = datetime.now(timezone.utc)
+        
         new_rows = [
             Circular(
                 source_name=source_name,
                 source_url=url,
                 chunk_index=i,
                 chunk_text=chunk,
+                scraped_at=now,
             )
             for i, chunk in enumerate(chunks)
         ]

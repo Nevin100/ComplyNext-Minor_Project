@@ -74,3 +74,4 @@ class Circular(Base):
     source_url = Column(String, nullable=False)       # original RBI link - needed for citations
     chunk_index = Column(Integer, nullable=False)      # position of this chunk within the document
     chunk_text = Column(String, nullable=False)
+    scraped_at = Column(DateTime(timezone=True), server_default=func.now())

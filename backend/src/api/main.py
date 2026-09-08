@@ -20,6 +20,7 @@ from src.embeddings.vector_store import semantic_search
 from src.schemas.search import CircularSearchResult
 from src.api.loan_routes import router as loan_router
 from src.api.company_routes import router as company_router
+from src.api.circular_routes import router as circular_router
 
 app = FastAPI(title="ComplyNext API")
 
@@ -35,7 +36,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(loan_router)
 app.include_router(company_router)
-
+app.include_router(circular_router)
 
 @app.get("/")
 def health_check():
