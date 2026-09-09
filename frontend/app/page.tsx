@@ -6,339 +6,363 @@ import {
   CheckCircle2,
   FileSpreadsheet,
   Building2,
-  FileText,
+  Lock,
 } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-white text-slate-900 selection:bg-blue-100 selection:text-blue-900 font-sans">
-      
-      {/* Top Banner */}
-      <div className="bg-slate-900 text-white text-xs py-2.5 px-4 text-center font-medium flex items-center justify-center gap-2">
-        <span className="bg-blue-500 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded text-white">
-          Update
+    <div className="min-h-screen bg-white text-slate-900 selection:bg-blue-100 selection:text-blue-900 font-sans scroll-smooth">
+      {/* Top Advisory Banner */}
+      <div className="bg-slate-950 text-slate-300 text-xs py-2.5 px-4 text-center font-medium border-b border-slate-800">
+        <span className="bg-blue-600 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded text-white mr-2">
+          Regulatory Bulletin
         </span>
-        <span>Updated with RBI IRACP Master Circular Guidelines (2025–26)</span>
-        <Link href="#updates" className="underline hover:text-slate-200 ml-1 font-semibold">
-          Read notifications &rarr;
+        <span>Aligned with RBI IRACP Master Direction Guidelines</span>
+        <Link
+          href="#circulars"
+          className="text-white underline hover:text-slate-200 ml-2 font-semibold"
+        >
+          View Directives &rarr;
         </Link>
       </div>
 
-      {/* Navbar */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200">
-        <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-lg bg-blue-600 flex items-center justify-center shadow-sm">
-              <ShieldCheck className="h-5 w-5 text-white" />
+      {/* Primary Sticky Header */}
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80">
+        <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 py-3.5">
+          <Link href="/" className="flex items-center gap-2.5">
+            <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-xs">
+              <ShieldCheck className="h-4 w-4 text-white" />
             </div>
-            <span className="text-xl font-bold tracking-tight text-slate-950">
+            <span className="text-lg font-bold tracking-tight text-slate-950">
               Comply<span className="text-blue-600">Next</span>
             </span>
-          </div>
+          </Link>
 
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
+          {/* Functional Navigation Links */}
+          <div className="hidden md:flex items-center gap-8 text-xs font-semibold text-slate-600">
             <Link href="#features" className="hover:text-blue-600 transition-colors">
-              Features
+              Platform Features
             </Link>
             <Link href="#solutions" className="hover:text-blue-600 transition-colors">
-              Banks & NBFCs
+              Institutional Framework
             </Link>
             <Link href="#circulars" className="hover:text-blue-600 transition-colors">
-              Circular Tracker
+              Circular Indexer
             </Link>
             <Link href="#security" className="hover:text-blue-600 transition-colors">
-              Audit & Security
+              Audit & Governance
             </Link>
           </div>
 
           <div className="flex items-center gap-3">
             <Link
               href="/login"
-              className="text-sm font-semibold text-slate-700 hover:text-blue-600 px-3 py-2 transition-colors"
+              className="text-xs font-semibold text-slate-700 hover:text-blue-600 px-3 py-2 transition-colors"
             >
-              Log in
+              Sign In
             </Link>
             <Link
               href="/signup"
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-all shadow-xs"
             >
-              <span>Request Access</span>
-              <ArrowRight className="h-4 w-4" />
+              <span>Provision Instance</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </nav>
       </header>
 
-      {/* Hero Section: Left Text + Right Image Layout */}
+      {/* Hero Section */}
       <section className="pt-16 pb-20 md:pt-24 md:pb-28 px-6 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
           
-          {/* Left Column (Hero Content) */}
+          {/* Hero Left Content */}
           <div className="lg:col-span-7 flex flex-col items-start text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-blue-700 text-xs font-semibold mb-6">
-              <span className="w-2 h-2 rounded-full bg-blue-600"></span>
-              Regulatory Compliance Platform
-            </div>
-
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-950 leading-[1.12]">
               RBI Compliance, <br />
-              <span className="text-blue-600">Automated & Auditable.</span>
+              <span className="text-blue-600">Deterministic & Audit-Ready.</span>
             </h1>
 
-            <p className="mt-6 text-slate-600 text-base sm:text-lg leading-relaxed max-w-xl">
-              Deterministic rule engines for multi-tenant NPA staging (SMA-0, SMA-1, SMA-2), automated regulatory filing, and continuous RBI circular compliance for Scheduled Banks and NBFCs.
+            <p className="mt-6 text-slate-600 text-base sm:text-lg leading-relaxed max-w-xl font-normal">
+              Continuous DPD classification, multi-tenant asset segregation, and vector-indexed RBI circular tracking engineered strictly for Scheduled Commercial Banks and NBFCs.
             </p>
 
-            {/* CTA Group */}
-            <div className="mt-8 flex flex-col sm:flex-row items-center gap-3.5 w-full sm:w-auto">
+            <div className="mt-8 flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
               <Link
                 href="/signup"
-                className="w-full sm:w-auto px-6 py-3.5 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20 text-center flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-6 py-3 rounded-md font-semibold text-white bg-blue-600 hover:bg-blue-700 transition shadow-xs text-xs sm:text-sm flex items-center justify-center gap-2"
               >
-                <span>Get Started</span>
+                <span>Deploy Organization Enclave</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 href="/dashboard"
-                className="w-full sm:w-auto px-6 py-3.5 rounded-lg font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 transition-all text-center"
+                className="w-full sm:w-auto px-6 py-3 rounded-md font-semibold text-slate-700 hover:text-slate-950 bg-white hover:bg-slate-50 border border-slate-200 transition text-xs sm:text-sm text-center"
               >
-                Explore Dashboard
+                Live Ledger Demo
               </Link>
             </div>
 
-            {/* Trust Checklist */}
-            <div className="mt-10 pt-8 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full text-xs font-medium text-slate-600">
+            {/* Micro-Badges */}
+            <div className="mt-10 pt-8 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-3.5 w-full text-xs text-slate-600 font-medium">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>IRACP Master Direction Compliant</span>
+                <span>IRACP Master Staging (SMA-0/1/2)</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Multi-Tenant Schema Isolation</span>
+                <span>Isolated Multi-Tenant Ledger Schemas</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Immutable Audit Logs for Inspection</span>
+                <span>Immutable Statutory Audit Logs</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Daily DPD Batch Processing</span>
+                <span>Deterministic Zero-Provision Drift</span>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Image / Interactive Product Preview */}
-          <div className="lg:col-span-5 relative">
-            
-            {/* NOTE: Agar aapko apni Image lagani hai, toh neeche wale div ko uncomment karke 'dashboard-preview.png' daal sakte hain:
-            <div className="relative rounded-2xl overflow-hidden border border-slate-200 shadow-2xl bg-white">
-              <Image 
-                src="/dashboard-preview.png" 
-                alt="ComplyNext Platform Overview" 
-                width={700} 
-                height={550} 
-                className="w-full h-auto object-cover"
-              />
-            </div>
-            */}
-
-            {/* Live Stand-in Mockup Box (Looks extremely authentic & sharp) */}
-            <div className="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl shadow-slate-200/80">
-              
-              {/* Window Header */}
-              <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+          {/* Hero Right Ledger Preview Card */}
+          <div className="lg:col-span-5">
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-lg shadow-slate-200/50">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                 <div className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-slate-300" />
                 </div>
-                <span className="text-[11px] font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                  IRACP Staging: Live
+                <span className="text-[10px] font-mono font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                  ENGINE: ACTIVE / RBI-IRACP-2026
                 </span>
               </div>
 
-              {/* Status Header */}
-              <div className="py-4 flex justify-between items-center">
+              <div className="py-3 flex justify-between items-center">
                 <div>
-                  <h4 className="text-xs uppercase tracking-wider font-bold text-slate-500">Asset Classification</h4>
-                  <p className="text-xl font-bold text-slate-900 mt-0.5">₹ 148.42 Cr Portfolio</p>
+                  <span className="text-[10px] uppercase font-bold text-slate-400">Total Scanned Capital</span>
+                  <p className="text-xl font-bold text-slate-900 font-mono">₹148.42 Cr</p>
                 </div>
-                <span className="px-2.5 py-1 text-xs font-semibold rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  Daily Run: Passed
+                <span className="px-2 py-0.5 text-[11px] font-semibold rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono">
+                  0 Unreconciled
                 </span>
               </div>
 
-              {/* Mock Table */}
+              {/* Sample Table */}
               <div className="border border-slate-200 rounded-lg overflow-hidden text-xs">
-                <div className="grid grid-cols-3 bg-slate-50 p-2.5 font-semibold text-slate-600 border-b border-slate-200">
-                  <span>Account ID</span>
-                  <span className="text-center">DPD</span>
-                  <span className="text-right">Classification</span>
+                <div className="grid grid-cols-3 bg-slate-50 p-2 font-semibold text-slate-500 text-[11px] border-b border-slate-200">
+                  <span>Account</span>
+                  <span className="text-center">Overdue</span>
+                  <span className="text-right">Computed</span>
                 </div>
-                <div className="divide-y divide-slate-100">
+                <div className="divide-y divide-slate-100 font-mono">
                   <div className="grid grid-cols-3 p-2.5 items-center">
-                    <span className="font-mono text-slate-800">ACC-90412</span>
-                    <span className="text-center font-medium text-slate-600">0 Days</span>
+                    <span className="text-slate-800 font-semibold">LN101</span>
+                    <span className="text-center text-slate-500">0d</span>
                     <span className="text-right">
-                      <span className="inline-block px-1.5 py-0.5 text-[10px] font-bold rounded bg-slate-100 text-slate-700">STANDARD</span>
+                      <span className="inline-block px-1.5 py-0.5 text-[10px] font-bold rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        STANDARD
+                      </span>
                     </span>
                   </div>
-                  <div className="grid grid-cols-3 p-2.5 items-center bg-amber-50/40">
-                    <span className="font-mono text-slate-800">ACC-78331</span>
-                    <span className="text-center font-bold text-amber-700">34 Days</span>
+                  <div className="grid grid-cols-3 p-2.5 items-center bg-amber-50/30">
+                    <span className="text-slate-800 font-semibold">LN102</span>
+                    <span className="text-center font-bold text-amber-700">75d</span>
                     <span className="text-right">
-                      <span className="inline-block px-1.5 py-0.5 text-[10px] font-bold rounded bg-amber-100 text-amber-800">SMA-1</span>
+                      <span className="inline-block px-1.5 py-0.5 text-[10px] font-bold rounded bg-amber-100 text-amber-800">
+                        SMA-2
+                      </span>
                     </span>
                   </div>
-                  <div className="grid grid-cols-3 p-2.5 items-center bg-rose-50/40">
-                    <span className="font-mono text-slate-800">ACC-54190</span>
-                    <span className="text-center font-bold text-rose-700">68 Days</span>
+                  <div className="grid grid-cols-3 p-2.5 items-center bg-rose-50/30">
+                    <span className="text-slate-800 font-semibold">LN103</span>
+                    <span className="text-center font-bold text-rose-700">95d</span>
                     <span className="text-right">
-                      <span className="inline-block px-1.5 py-0.5 text-[10px] font-bold rounded bg-rose-100 text-rose-800">SMA-2</span>
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-3 p-2.5 items-center">
-                    <span className="font-mono text-slate-800">ACC-11029</span>
-                    <span className="text-center font-medium text-slate-600">12 Days</span>
-                    <span className="text-right">
-                      <span className="inline-block px-1.5 py-0.5 text-[10px] font-bold rounded bg-blue-100 text-blue-800">SMA-0</span>
+                      <span className="inline-block px-1.5 py-0.5 text-[10px] font-bold rounded bg-rose-100 text-rose-800">
+                        NPA
+                      </span>
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Mock Floating Tag */}
-              <div className="mt-4 p-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs text-slate-700 font-medium">
-                  <FileText className="w-4 h-4 text-blue-600" />
-                  <span>RBI Audit Report Generated</span>
-                </div>
-                <span className="text-[11px] font-mono font-bold text-blue-600 hover:underline cursor-pointer">
-                  Export PDF
+              <div className="mt-3.5 p-2.5 rounded bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
+                <span className="text-slate-600 font-medium text-[11px]">Audit Citation Generated</span>
+                <span className="text-[11px] font-mono text-blue-600 font-semibold">
+                  Rule Ref: IRACP-Norms
                 </span>
               </div>
-
             </div>
           </div>
 
         </div>
       </section>
 
-      {/* Trust Numbers Strip */}
-      <section className="border-y border-slate-200 bg-slate-50/70 py-12 px-6">
-        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-          <div>
-            <p className="text-3xl sm:text-4xl font-extrabold text-slate-950">100%</p>
-            <p className="text-xs sm:text-sm text-slate-600 font-medium mt-1">IRACP Rule Compliance</p>
-          </div>
-          <div>
-            <p className="text-3xl sm:text-4xl font-extrabold text-slate-950">24/7</p>
-            <p className="text-xs sm:text-sm text-slate-600 font-medium mt-1">Real-time Circular Crawlers</p>
-          </div>
-          <div>
-            <p className="text-3xl sm:text-4xl font-extrabold text-slate-950">&lt; 100ms</p>
-            <p className="text-xs sm:text-sm text-slate-600 font-medium mt-1">Classification Latency</p>
-          </div>
-          <div>
-            <p className="text-3xl sm:text-4xl font-extrabold text-slate-950">Zero</p>
-            <p className="text-xs sm:text-sm text-slate-600 font-medium mt-1">Manual Provisioning Error</p>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Grid: High Professionalism */}
-      <section id="features" className="py-24 px-6 max-w-7xl mx-auto">
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <span className="text-xs font-bold text-blue-600 uppercase tracking-widest">
-            Core Modules
+      {/* Target ID #features */}
+      <section id="features" className="py-20 px-6 max-w-7xl mx-auto border-t border-slate-200 scroll-mt-20">
+        <div className="max-w-2xl mx-auto text-center mb-14">
+          <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">
+            Deterministic Architecture
           </span>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-950 mt-2">
-            Engineered Specifically for Regulatory Scrutiny
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-950 mt-1.5">
+            Core Regulatory Engine Modules
           </h2>
-          <p className="text-slate-600 text-sm sm:text-base mt-3">
-            Say goodbye to fragile spreadsheets and manual DPD classification.
+          <p className="text-slate-500 text-xs sm:text-sm mt-2">
+            Built to eliminate core-banking provisioning discrepancies during statutory inspections.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          
-          {/* Feature 1 */}
-          <div className="p-8 rounded-xl border border-slate-200 bg-white hover:shadow-lg transition-all hover:border-blue-200 group">
-            <div className="w-12 h-12 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-              <FileSpreadsheet className="w-6 h-6" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="p-6 rounded-xl border border-slate-200 bg-white shadow-2xs">
+            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 mb-5">
+              <FileSpreadsheet className="w-5 h-5" />
             </div>
-            <h3 className="text-lg font-bold text-slate-950 mb-2">Automated NPA Staging</h3>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              Standardized classification for SMA-0, SMA-1, SMA-2 and Substandard/Doubtful assets with exact regulatory provisioning calculation based on collateral values.
+            <h3 className="text-sm font-bold text-slate-950 mb-2">Automated Staging</h3>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Batch processing for daily overdue balances. Flags discrepancies between core-banking asset categories and statutory IRACP classifications.
             </p>
           </div>
 
-          {/* Feature 2 */}
-          <div className="p-8 rounded-xl border border-slate-200 bg-white hover:shadow-lg transition-all hover:border-blue-200 group">
-            <div className="w-12 h-12 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-              <Search className="w-6 h-6" />
+          <div className="p-6 rounded-xl border border-slate-200 bg-white shadow-2xs">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-800 mb-5">
+              <Search className="w-5 h-5" />
             </div>
-            <h3 className="text-lg font-bold text-slate-950 mb-2">RBI Circular Indexing</h3>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              Real-time monitoring of notifications from the Reserve Bank of India. Automated tagging against relevant operational policies and credit committees.
+            <h3 className="text-sm font-bold text-slate-950 mb-2">Vectorized Circular Retrieval</h3>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Chunk-level semantic embeddings over the entire archive of RBI Master Directions. Direct clause citations for credit review committees.
             </p>
           </div>
 
-          {/* Feature 3 */}
-          <div className="p-8 rounded-xl border border-slate-200 bg-white hover:shadow-lg transition-all hover:border-blue-200 group">
-            <div className="w-12 h-12 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mb-6 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-              <Building2 className="w-6 h-6" />
+          <div className="p-6 rounded-xl border border-slate-200 bg-white shadow-2xs">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-800 mb-5">
+              <Building2 className="w-5 h-5" />
             </div>
-            <h3 className="text-lg font-bold text-slate-950 mb-2">Multi-Tenant Vaults</h3>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              Complete tenant separation for banks operating subsidiary NBFCs or multiple lending entities, with fine-grained role permissions and RBAC controls.
+            <h3 className="text-sm font-bold text-slate-950 mb-2">Tenant Encapsulation</h3>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Row-Level Security (RLS) and strict institutional scoping. Complete isolation between separate bank branches, NBFC entities, and audit units.
             </p>
           </div>
-
         </div>
       </section>
 
-      {/* CTA Bottom Banner */}
-      <section className="bg-slate-900 text-white py-16 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold tracking-tight">
-            Ready to streamline your regulatory audits?
+      {/* Target ID #solutions */}
+      <section id="solutions" className="py-20 px-6 bg-slate-50/70 border-t border-slate-200 scroll-mt-20">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+          <div className="lg:col-span-5 space-y-4">
+            <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">
+              Institutional Framework
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-950">
+              Built for Scheduled Banks & Non-Banking Lenders
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              ComplyNext bridges the operational divide between core lending systems and the Reserve Bank of India’s updated prudential guidelines.
+            </p>
+          </div>
+
+          <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="p-5 rounded-lg bg-white border border-slate-200 shadow-2xs">
+              <h4 className="text-xs font-bold text-slate-950 mb-1.5">For Scheduled Commercial Banks</h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Automated identification of SMA accounts prior to standard reporting cycles, mitigating sudden provisioning jumps.
+              </p>
+            </div>
+            <div className="p-5 rounded-lg bg-white border border-slate-200 shadow-2xs">
+              <h4 className="text-xs font-bold text-slate-950 mb-1.5">For Retail & Scale NBFCs</h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Seamless CSV or REST API ledger ingestion with automated compliance receipts for external regulatory auditors.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Target ID #circulars */}
+      <section id="circulars" className="py-20 px-6 max-w-7xl mx-auto border-t border-slate-200 scroll-mt-20">
+        <div className="max-w-2xl mx-auto text-center mb-12">
+          <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">
+            Live Regulatory Registry
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-950 mt-1.5">
+            Continuous Circular Tracking
           </h2>
-          <p className="text-slate-400 mt-3 text-sm sm:text-base max-w-xl mx-auto">
-            Deploy ComplyNext on-premise or into your private VPC with standard banking compliance checklists.
+          <p className="text-slate-500 text-xs sm:text-sm mt-2">
+            Automated crawlers indexing Master Directions directly into accessible vector chunks.
           </p>
-          <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+        </div>
+
+        <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-2xs text-xs">
+          <div className="p-3.5 bg-slate-50/80 border-b border-slate-200 font-semibold text-slate-600 flex justify-between items-center">
+            <span>Official Directives & Classification Scope</span>
+            <span className="font-mono text-[11px] text-slate-400">rbi.org.in</span>
+          </div>
+          <div className="divide-y divide-slate-100">
+            <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <p className="font-bold text-slate-900">RBI Master Circular - Prudential Norms on IRACP</p>
+                <p className="text-slate-500 text-[11px] mt-0.5">Asset classification, provisioning norms & income recognition</p>
+              </div>
+              <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 w-fit">
+                ACTIVE NORM
+              </span>
+            </div>
+            <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <p className="font-bold text-slate-900">Framework for Revitalising Distressed Assets</p>
+                <p className="text-slate-500 text-[11px] mt-0.5">Early detection of stress and SMA-0/1/2 reporting timelines</p>
+              </div>
+              <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 w-fit">
+                INDEXED CHUNKS
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Target ID #security */}
+      <section id="security" className="py-20 px-6 bg-slate-900 text-white scroll-mt-20">
+        <div className="max-w-4xl mx-auto text-center space-y-4">
+          <div className="h-10 w-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center mx-auto text-blue-400">
+            <Lock className="w-5 h-5" />
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            Enterprise Security & Tenant Isolation
+          </h2>
+          <p className="text-slate-400 text-xs sm:text-sm leading-relaxed max-w-xl mx-auto">
+            Role-based access controls, encrypted tenant partitions, and immutable audit logs designed for on-premise or private VPC deployments.
+          </p>
+          <div className="pt-4 flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/signup"
-              className="px-6 py-3 rounded-lg font-semibold bg-blue-600 hover:bg-blue-500 text-white transition-colors text-sm"
+              className="px-5 py-2.5 rounded-md font-semibold bg-blue-600 hover:bg-blue-500 text-white transition text-xs"
             >
-              Start Free Pilot
+              Request Institutional Pilot
             </Link>
             <Link
               href="/login"
-              className="px-6 py-3 rounded-lg font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors border border-slate-700 text-sm"
+              className="px-5 py-2.5 rounded-md font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 transition border border-slate-700 text-xs"
             >
-              Contact Solutions Architect
+              Sign In to Enclave
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Clean Minimal Footer */}
-      <footer className="bg-white border-t border-slate-200 py-10 px-6">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-slate-500 font-medium">
+      {/* Footer */}
+      <footer className="bg-white border-t border-slate-200 py-8 px-6 text-xs text-slate-500">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-blue-600" />
-            <span>© {new Date().getFullYear()} ComplyNext. Built for Banking & Lending Institutions.</span>
+            <span>&copy; {new Date().getFullYear()} ComplyNext. Banking & Lending Compliance Stack.</span>
           </div>
-          <div className="flex gap-6">
-            <Link href="#" className="hover:text-slate-900">Documentation</Link>
-            <Link href="#" className="hover:text-slate-900">Security Specs</Link>
-            <Link href="#" className="hover:text-slate-900">Audit Compliance</Link>
+          <div className="flex gap-6 font-medium">
+            <Link href="#features" className="hover:text-slate-900">Features</Link>
+            <Link href="#solutions" className="hover:text-slate-900">Solutions</Link>
+            <Link href="#circulars" className="hover:text-slate-900">Circulars</Link>
+            <Link href="#security" className="hover:text-slate-900">Security</Link>
           </div>
         </div>
       </footer>
-
     </div>
   );
 }

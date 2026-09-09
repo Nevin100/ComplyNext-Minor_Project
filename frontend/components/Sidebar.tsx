@@ -46,9 +46,11 @@ export default function Sidebar() {
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-lg font-bold text-slate-900 truncate tracking-tight">
+                  <Link href={"/"} >
+                    <span className="text-lg font-bold text-slate-900 truncate tracking-tight">
                     ComplyNext
                   </span>
+                  </Link>
                   <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-100 text-slate-500 font-semibold border border-slate-200/60">
                     BANK
                   </span>
