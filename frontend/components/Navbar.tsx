@@ -9,7 +9,6 @@ import {
   LogOut,
   Menu,
   ChevronDown,
-  Building,
   CheckCircle2,
 } from "lucide-react";
 
@@ -71,10 +70,6 @@ export default function Navbar({ onOpenMobileMenu }: NavbarProps) {
 
         {/* Desktop Tenant Context / Active Branch */}
         <div className="hidden md:flex items-center gap-2 text-xs">
-          <div className="flex items-center gap-1.5 text-slate-600 font-medium">
-            <Building className="w-3.5 h-3.5 text-slate-400" />
-            <span>HDFC Lending Unit</span>
-          </div>
           <span className="text-slate-300">/</span>
           <span className="inline-flex items-center gap-1 text-[11px] font-mono font-medium px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200/60">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
