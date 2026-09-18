@@ -138,39 +138,85 @@ export default function ClassifyPage() {
   };
 
   const handleFileUpload = async () => {
-    const token = getToken();
-    if (!token || !file) return;
-    setUploading(true);
-    setBulkMsg(null);
-    try {
-      const data = new FormData();
-      data.append("file", file);
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/loans/bulk`,
-        data,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        },
-      );
-      setBulkMsg({
-        type: "success",
-        text: `Batch file "${file.name}" processed successfully. Classification updated.`,
-      });
-      setFile(null);
-    } catch (err: any) {
-      setBulkMsg({
-        type: "error",
-        text:
-          err?.response?.data?.detail ||
-          "Batch parsing failed. Validate column headers.",
-      });
-    } finally {
-      setUploading(false);
+  const token = getToken();
+
+  if (!token || !file) return;
+
+  setUploading(true);
+  setBulkMsg(null);
+
+  try {
+    const text = await file.text();
+
+    const rows = text
+      .trim()
+      .split("\n")
+      .map((row) => row.trim())
+      .filter(Boolean);
+
+    if (rows.length < 2) {
+      throw new Error("CSV file must contain a header and at least one record.");
     }
-  };
+
+    const headers = rows[0]
+      .split(",")
+      .map((header) => header.trim());
+
+    const records = rows.slice(1).map((row) => {
+      const values = row
+        .split(",")
+        .map((value) => value.trim());
+
+      const record: Record<string, string> = {};
+
+      headers.forEach((header, index) => {
+        record[header] = values[index] ?? "";
+      });
+
+      return {
+        account_id: record.account_id,
+        borrower_name: record.borrower_name,
+        account_type: record.account_type || "term_loan",
+        days_past_due: Number(record.days_past_due),
+        outstanding_amount: Number(record.outstanding_amount),
+        existing_classification:
+          record.existing_classification || null,
+      };
+    });
+
+    await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/loan-accounts/bulk`,
+      records,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    setBulkMsg({
+      type: "success",
+      text: `Batch file "${file.name}" processed successfully. ${records.length} accounts added.`,
+    });
+
+    setFile(null);
+  } catch (err: unknown) {
+    const message = axios.isAxiosError(err)
+      ? err.response?.data?.detail
+      : err instanceof Error
+        ? err.message
+        : undefined;
+
+    setBulkMsg({
+      type: "error",
+      text:
+        message ||
+        "Batch parsing failed. Validate column headers.",
+    });
+  } finally {
+    setUploading(false);
+  }
+};
 
   const handleSampleCSVDownload = () => {
     const csvContent =
