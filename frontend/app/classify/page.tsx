@@ -53,19 +53,28 @@ export default function ClassifyPage() {
   const [form, setForm] = useState({
     account_id: "",
     borrower_name: "",
+    account_type: "term_loan", // NEW
     days_past_due: "",
+    outstanding_amount: "", // NEW
     existing_classification: "Standard",
   });
   const [submitting, setSubmitting] = useState(false);
-  const [formMsg, setFormMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [formMsg, setFormMsg] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   // Bulk Upload State
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [bulkMsg, setBulkMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [bulkMsg, setBulkMsg] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   // Recent Evaluation Receipt
-  const [latestEvaluation, setLatestEvaluation] = useState<EvaluatedLoan | null>(null);
+  const [latestEvaluation, setLatestEvaluation] =
+    useState<EvaluatedLoan | null>(null);
 
   useEffect(() => {
     const token = getToken();
@@ -76,7 +85,9 @@ export default function ClassifyPage() {
     setAuthChecked(true);
   }, [router]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -88,9 +99,13 @@ export default function ClassifyPage() {
     setFormMsg(null);
     try {
       const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/loans`,
-        { ...form, days_past_due: Number(form.days_past_due) },
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${process.env.NEXT_PUBLIC_API_URL}/api/loan-accounts`,
+        {
+          ...form,
+          days_past_due: Number(form.days_past_due),
+          outstanding_amount: Number(form.outstanding_amount), // ensure it's a number, not a string
+        },
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       // Agar backend immediately classified output bhejta hai
@@ -105,13 +120,17 @@ export default function ClassifyPage() {
       setForm({
         account_id: "",
         borrower_name: "",
+        account_type: "term_loan",
         days_past_due: "",
+        outstanding_amount: "",
         existing_classification: "Standard",
       });
     } catch (err: any) {
       setFormMsg({
         type: "error",
-        text: err?.response?.data?.detail || "Failed to commit loan account to ledger.",
+        text:
+          err?.response?.data?.detail ||
+          "Failed to commit loan account to ledger.",
       });
     } finally {
       setSubmitting(false);
@@ -134,7 +153,7 @@ export default function ClassifyPage() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
       setBulkMsg({
         type: "success",
@@ -144,7 +163,9 @@ export default function ClassifyPage() {
     } catch (err: any) {
       setBulkMsg({
         type: "error",
-        text: err?.response?.data?.detail || "Batch parsing failed. Validate column headers.",
+        text:
+          err?.response?.data?.detail ||
+          "Batch parsing failed. Validate column headers.",
       });
     } finally {
       setUploading(false);
@@ -172,7 +193,6 @@ export default function ClassifyPage() {
   return (
     <AppLayout>
       <div className="min-h-screen bg-white text-slate-900 flex flex-col font-sans">
-        
         {/* Subheader Strip */}
         <div className="border-b border-slate-200/80 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -185,7 +205,8 @@ export default function ClassifyPage() {
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Submit asset records for deterministic IRACP DPD staging & circular evaluation.
+              Submit asset records for deterministic IRACP DPD staging &
+              circular evaluation.
             </p>
           </div>
 
@@ -204,7 +225,10 @@ export default function ClassifyPage() {
         <div className="px-6 py-2.5 bg-slate-50/60 border-b border-slate-200/80 flex items-center justify-between text-xs text-slate-500">
           <div className="flex items-center gap-2">
             <Building className="w-3.5 h-3.5 text-slate-400" />
-            <span>Records committed here are isolated exclusively to your registered company JWT.</span>
+            <span>
+              Records committed here are isolated exclusively to your registered
+              company JWT.
+            </span>
           </div>
           <button
             onClick={handleSampleCSVDownload}
@@ -218,7 +242,6 @@ export default function ClassifyPage() {
         {/* Content Container */}
         <div className="p-6 max-w-7xl w-full mx-auto space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            
             {/* Left Col: Single Entry Form (7 cols) */}
             <div className="lg:col-span-7 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
@@ -227,11 +250,17 @@ export default function ClassifyPage() {
                     <FilePlus2 className="w-4 h-4" />
                   </div>
                   <div>
-                    <h2 className="text-sm font-bold text-slate-900 leading-none">Single Account Ingestion</h2>
-                    <p className="text-[11px] text-slate-400 mt-0.5">Commit real-time loan record</p>
+                    <h2 className="text-sm font-bold text-slate-900 leading-none">
+                      Single Account Ingestion
+                    </h2>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Commit real-time loan record
+                    </p>
                   </div>
                 </div>
-                <span className="text-[10px] font-mono text-slate-400 uppercase">Step 1 of 1</span>
+                <span className="text-[10px] font-mono text-slate-400 uppercase">
+                  Step 1 of 1
+                </span>
               </div>
 
               {formMsg && (
@@ -309,6 +338,43 @@ export default function ClassifyPage() {
                   />
                 </div>
 
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Account Type */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">
+                      Account Type
+                    </label>
+                    <select
+                      name="account_type"
+                      value={form.account_type}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:bg-white focus:ring-1 focus:ring-blue-600 text-slate-900 font-medium transition"
+                    >
+                      <option value="term_loan">Term Loan</option>
+                      <option value="revolving">
+                        Revolving (Cash Credit / OD)
+                      </option>
+                    </select>
+                  </div>
+
+                  {/* Outstanding Amount */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">
+                      Outstanding Amount (₹)
+                    </label>
+                    <input
+                      type="number"
+                      name="outstanding_amount"
+                      placeholder="e.g. 250000"
+                      min={0}
+                      value={form.outstanding_amount}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:bg-white focus:ring-1 focus:ring-blue-600 font-mono text-slate-900 transition"
+                    />
+                  </div>
+                </div>
+
                 {/* Existing CBS Classification */}
                 <div>
                   <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">
@@ -362,8 +428,12 @@ export default function ClassifyPage() {
                     <FileSpreadsheet className="w-4 h-4" />
                   </div>
                   <div>
-                    <h2 className="text-sm font-bold text-slate-900 leading-none">Bulk Batch Upload</h2>
-                    <p className="text-[11px] text-slate-400 mt-0.5">Multipart CSV file parsing</p>
+                    <h2 className="text-sm font-bold text-slate-900 leading-none">
+                      Bulk Batch Upload
+                    </h2>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Multipart CSV file parsing
+                    </p>
                   </div>
                 </div>
 
@@ -403,7 +473,9 @@ export default function ClassifyPage() {
 
                 {file && (
                   <div className="mt-3 flex items-center justify-between p-2 rounded bg-slate-50 border border-slate-200 text-xs">
-                    <span className="font-mono text-slate-700 truncate max-w-xs">{file.name}</span>
+                    <span className="font-mono text-slate-700 truncate max-w-xs">
+                      {file.name}
+                    </span>
                     <button
                       onClick={() => setFile(null)}
                       className="text-rose-600 hover:underline text-[11px] font-semibold"
@@ -418,7 +490,9 @@ export default function ClassifyPage() {
                   disabled={!file || uploading}
                   className="w-full mt-4 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold py-2 rounded-md transition-all disabled:opacity-40 shadow-xs"
                 >
-                  {uploading ? "Ingesting Portfolio Batch..." : "Upload & Parse Portfolio"}
+                  {uploading
+                    ? "Ingesting Portfolio Batch..."
+                    : "Upload & Parse Portfolio"}
                 </button>
               </div>
 
@@ -436,7 +510,6 @@ export default function ClassifyPage() {
                 </div>
               </div>
             </div>
-
           </div>
 
           {/* Latest Live Evaluation Output (if available) */}
@@ -456,10 +529,14 @@ export default function ClassifyPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
                 <div>
-                  <span className="text-slate-400 block text-[11px]">Computed Staging</span>
+                  <span className="text-slate-400 block text-[11px]">
+                    Computed Staging
+                  </span>
                   <span
                     className={`inline-block mt-1 font-semibold px-2 py-0.5 rounded border ${
-                      statusBadgeStyles[latestEvaluation.computed_classification] || "bg-slate-100"
+                      statusBadgeStyles[
+                        latestEvaluation.computed_classification
+                      ] || "bg-slate-100"
                     }`}
                   >
                     {latestEvaluation.computed_classification}
@@ -467,22 +544,28 @@ export default function ClassifyPage() {
                 </div>
 
                 <div>
-                  <span className="text-slate-400 block text-[11px]">Audit Result</span>
+                  <span className="text-slate-400 block text-[11px]">
+                    Audit Result
+                  </span>
                   <span className="mt-1 inline-flex items-center gap-1 font-bold">
                     {latestEvaluation.is_misclassified ? (
                       <span className="text-rose-600 flex items-center gap-1">
-                        <ShieldAlert className="w-3.5 h-3.5" /> Mismatch Detected
+                        <ShieldAlert className="w-3.5 h-3.5" /> Mismatch
+                        Detected
                       </span>
                     ) : (
                       <span className="text-emerald-600 flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Aligned with CBS
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Aligned with
+                        CBS
                       </span>
                     )}
                   </span>
                 </div>
 
                 <div className="sm:col-span-2">
-                  <span className="text-slate-400 block text-[11px]">Regulatory Rationale</span>
+                  <span className="text-slate-400 block text-[11px]">
+                    Regulatory Rationale
+                  </span>
                   <p className="mt-1 text-slate-700 font-medium text-[11px]">
                     {latestEvaluation.reasoning}
                   </p>
@@ -495,9 +578,7 @@ export default function ClassifyPage() {
               </div>
             </div>
           )}
-
         </div>
-
       </div>
     </AppLayout>
   );
