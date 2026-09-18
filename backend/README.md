@@ -39,7 +39,7 @@ FastAPI backend — auth, multi-tenant loan account management, deterministic NP
 
 - **Framework**: FastAPI · **Package Manager**: `uv` · **DB**: SQLite + SQLAlchemy ORM
 - **Auth**: JWT (`python-jose`) + bcrypt (`passlib`)
-- **Scraping**: `requests` + BeautifulSoup4
+ - **Scraping**: `requests` + BeautifulSoup4
 - **Embeddings/Vector Store**: `sentence-transformers` (`all-MiniLM-L6-v2`) + ChromaDB
 
 ## Folder Structure
