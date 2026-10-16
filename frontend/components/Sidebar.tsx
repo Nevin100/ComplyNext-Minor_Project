@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   LogOut,
   ChevronsUpDown,
+  FileSearch,
 } from "lucide-react";
 
 interface NavItem {
@@ -28,6 +29,7 @@ const mainLinks: NavItem[] = [
   { href: "/circulars", label: "RBI Circulars", icon: FileText, badge: "Live", shortcut: "⌘3" },
   { href: "/search", label: "Regulatory Search", icon: Search, shortcut: "⌘4" },
   { href: "/company", label: "Entity Profile", icon: Building2, shortcut: "⌘5" },
+  { href: "/policy-check", label: "Policy Gap Check", icon: FileSearch, badge: "AI", shortcut: "⌘6" },
 ];
 
 export default function Sidebar() {
