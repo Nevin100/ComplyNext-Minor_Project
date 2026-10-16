@@ -10,3 +10,6 @@ pydantic[email]
 bcrypt==4.0.1
 chromadb
 sentence-transformers
+langgraph
+groq
+pypdf

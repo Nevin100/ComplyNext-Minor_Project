@@ -7,7 +7,7 @@ company - this linkage is the entire mechanism behind data isolation.
 """
 
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Float, Text, ForeignKey, DateTime
 from sqlalchemy.sql import func
 
 from src.db.database import Base
@@ -25,6 +25,8 @@ class Company(Base):
     # in Python we can do `company.users` to get all users of that company.
     users = relationship("User", back_populates="company")
     loan_accounts = relationship("LoanAccount", back_populates="company")
+    policy_documents = relationship("PolicyDocument", back_populates="company")
+
 
 class User(Base):
     """
@@ -75,3 +77,40 @@ class Circular(Base):
     chunk_index = Column(Integer, nullable=False)      # position of this chunk within the document
     chunk_text = Column(String, nullable=False)
     scraped_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class PolicyDocument(Base):
+    """
+    Ek company ka uploaded internal policy document.
+    company_id yahan bhi hai - multi-tenant isolation har table me.
+    """
+    __tablename__ = "policy_documents"
+
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
+    filename = Column(String, nullable=False)
+    file_text = Column(Text, nullable=False)
+    uploaded_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    company = relationship("Company", back_populates="policy_documents")
+    findings = relationship("GapFinding", back_populates="policy", cascade="all, delete-orphan")
+
+
+class GapFinding(Base):
+    """
+    LangGraph graph ka ek output row: policy ka ek clause + uska verdict.
+    rbi_* columns hi 'citation' feature hain - har finding traceable hai
+    exact circular chunk tak.
+    """
+    __tablename__ = "gap_findings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    policy_id = Column(Integer, ForeignKey("policy_documents.id"), nullable=False)
+    policy_clause = Column(Text, nullable=False)
+    status = Column(String, nullable=False)  # COMPLIANT / GAP / OUTDATED
+    explanation = Column(Text, nullable=False)
+    rbi_source_name = Column(String, nullable=True)
+    rbi_source_url = Column(String, nullable=True)
+    rbi_chunk_index = Column(Integer, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    policy = relationship("PolicyDocument", back_populates="findings")

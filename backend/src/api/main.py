@@ -21,6 +21,7 @@ from src.schemas.search import CircularSearchResult
 from src.api.loan_routes import router as loan_router
 from src.api.company_routes import router as company_router
 from src.api.circular_routes import router as circular_router
+from src.api.policy_routes import router as policy_router
 
 app = FastAPI(title="ComplyNext API")
 
@@ -37,6 +38,7 @@ app.include_router(auth_router)
 app.include_router(loan_router)
 app.include_router(company_router)
 app.include_router(circular_router)
+app.include_router(policy_router)
 
 @app.get("/")
 def health_check():

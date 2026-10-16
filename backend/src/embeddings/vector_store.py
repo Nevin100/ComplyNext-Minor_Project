@@ -78,13 +78,23 @@ def build_vector_store():
     collection.add(ids=ids, documents=documents, embeddings=embeddings, metadatas=metadatas)
     print(f"Stored {len(ids)} embeddings in ChromaDB collection '{COLLECTION_NAME}'.")
 
+_model_cache = None
+
+def _get_model():
+    """Model ek baar load, phir reuse - har search pe reload nahi."""
+    global _model_cache
+    if _model_cache is None:
+        _model_cache = SentenceTransformer(EMBEDDING_MODEL_NAME)
+    return _model_cache
+
+
 def semantic_search(query: str, top_k: int = 3):
     """
     Takes a natural-language question, embeds it with the SAME model
     used for storage, and asks ChromaDB for the most semantically
     similar chunks - this is the core "retrieval" step of RAG.
     """
-    model = SentenceTransformer(EMBEDDING_MODEL_NAME)
+    model = _get_model()
     query_embedding = model.encode([query]).tolist()
 
     collection = get_chroma_collection()
