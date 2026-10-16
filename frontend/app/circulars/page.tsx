@@ -1,439 +1,278 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import axios from "axios";
-import { getToken } from "@/lib/auth";
-import AppLayout from "@/components/AppLayout";
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
 import {
-  FileText,
-  Search,
-  ExternalLink,
-  DownloadCloud,
-  Layers,
-  AlertCircle,
-  Database,
-  Clock,
-  RefreshCw,
-  BellRing,
-  CheckCheck,
-} from "lucide-react";
+  Card,
+  PageHeader,
+  Spinner,
+  EmptyState,
+  ErrorBox,
+  OkBox,
+} from "@/components/ui";
+import { BellRing, RefreshCw } from "lucide-react";
 
-interface CircularDocument {
-  source_name: string;
-  source_url: string;
-  total_chunks: number;
+interface Circular {
+  id: number;
+  title: string;
+  url: string;
   scraped_at: string;
+  chunk_count: number;
 }
 
-interface ChangeAlert {
+interface Alert {
   id: number;
-  source_name: string;
-  source_url?: string;
-  summary: string;
-  seen: boolean;
+  url: string;
+  title: string | null;
   detected_at: string;
+  note: string | null;
+  seen: boolean;
 }
 
 export default function CircularsPage() {
-  const router = useRouter();
-  const [authChecked, setAuthChecked] = useState(false);
-  const [circulars, setCirculars] = useState<CircularDocument[]>([]);
+  const [circulars, setCirculars] = useState<Circular[]>([]);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
-  const [scraping, setScraping] = useState(false);
   const [error, setError] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [alerts, setAlerts] = useState<ChangeAlert[]>([]);
+  const [ok, setOk] = useState("");
+  const [scraping, setScraping] = useState(false);
   const [checking, setChecking] = useState(false);
-  const [checkMsg, setCheckMsg] = useState("");
 
-  const fetchCirculars = (token: string) => {
-    setLoading(true);
-    axios
-      .get<CircularDocument[]>(`${process.env.NEXT_PUBLIC_API_URL}/api/circulars`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        setCirculars(res.data || []);
-      })
-      .catch((err) => {
-        if (err?.response?.status === 401) router.push("/login");
-        else setError("Failed to synchronize circular documents from regulatory database.");
-      })
-      .finally(() => setLoading(false));
-  };
-
-  const fetchAlerts = (token: string) => {
-    axios
-      .get<ChangeAlert[]>(`${process.env.NEXT_PUBLIC_API_URL}/api/circulars/updates`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => setAlerts(res.data || []))
-      .catch(() => {});
+  const fetchAll = async () => {
+    try {
+      const [c, a] = await Promise.all([
+        api.get("/api/circulars/list"),
+        api.get("/api/circulars/updates"),
+      ]);
+      setCirculars(c.data ?? []);
+      setAlerts(a.data ?? []);
+    } catch {
+      setError("Could not load circulars.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    const token = getToken();
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-    setAuthChecked(true);
-    fetchCirculars(token);
-    fetchAlerts(token);
-  }, [router]);
+    fetchAll();
+  }, []);
 
   const handleScrape = async () => {
-    const token = getToken();
-    if (!token) return;
-    setScraping(true);
     setError("");
+    setOk("");
+    setScraping(true);
     try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/circulars/scrape`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      fetchCirculars(token);
+      await api.post("/api/circulars/scrape");
+      setOk("Scrape finished. Corpus refreshed.");
+      fetchAll();
     } catch {
-      setError("Scrape execution failed. Verify target endpoint connectivity.");
+      setError("Scrape failed. Check the backend logs.");
     } finally {
       setScraping(false);
     }
   };
 
-  const handleCheckUpdates = async () => {
-    const token = getToken();
-    if (!token) return;
+  const handleCheck = async () => {
+    setError("");
+    setOk("");
     setChecking(true);
-    setCheckMsg("");
     try {
-      const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/circulars/check-updates`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setAlerts(res.data.alerts || []);
-      const n = res.data.new_alerts;
-      setCheckMsg(
+      const res = await api.post("/api/circulars/check-updates");
+      const n = res.data?.new_alerts ?? 0;
+      setOk(
         n > 0
-          ? `${n} circular update(s) detected!`
-          : "Corpus in sync — koi naya change nahi."
+          ? `${n} new change alert${n === 1 ? "" : "s"} detected.`
+          : "Checked — no changes since the last snapshot."
       );
+      fetchAll();
     } catch {
-      setCheckMsg("Update check failed. RBI portal reachability verify karo.");
+      setError("Update check failed.");
     } finally {
       setChecking(false);
     }
   };
 
-  const handleMarkSeen = async (id: number) => {
-    const token = getToken();
-    if (!token) return;
+  const markSeen = async (id: number) => {
     try {
-      await axios.put(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/circulars/updates/${id}/seen`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
+      await api.put(`/api/circulars/updates/${id}/seen`);
+      setAlerts((prev) =>
+        prev.map((a) => (a.id === id ? { ...a, seen: true } : a))
       );
-      setAlerts((prev) => prev.map((a) => (a.id === id ? { ...a, seen: true } : a)));
     } catch {
-      /* silent */
+      /* non-blocking */
     }
   };
 
-  const unseenAlerts = alerts.filter((a) => !a.seen);
+  if (loading) return <Spinner label="Loading circulars…" />;
 
-  // Aggregate stats based on exact API schema
-  const totalChunksCount = useMemo(() => {
-    return circulars.reduce((acc, curr) => acc + (curr.total_chunks || 0), 0);
-  }, [circulars]);
-
-  // Fast client-side search by source_name or source_url
-  const filteredCirculars = useMemo(() => {
-    return circulars.filter((item) => {
-      const query = searchQuery.toLowerCase();
-      return (
-        item.source_name?.toLowerCase().includes(query) ||
-        item.source_url?.toLowerCase().includes(query)
-      );
-    });
-  }, [circulars, searchQuery]);
-
-  if (!authChecked) return null;
+  const unseen = alerts.filter((a) => !a.seen);
+  const seen = alerts.filter((a) => a.seen);
 
   return (
-    <AppLayout>
-      <div className="min-h-screen bg-white text-slate-900 flex flex-col font-sans">
-
-        {/* Header Strip */}
-        <div className="border-b border-slate-200/80 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-lg font-bold text-slate-950 tracking-tight">
-                RBI Regulatory Repository
-              </h1>
-              <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200/70">
-                Vector Indexed
-              </span>
-            </div>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Parsed Master Directions, circular document sources & chunked embeddings.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2.5">
+    <>
+      <PageHeader
+        eyebrow="Regulatory corpus"
+        title="RBI circulars"
+        desc="Indexed RBI circulars and the change monitor. Re-scrape to refresh the corpus, or check for updates to catch changed sources."
+        actions={
+          <>
             <button
-              onClick={handleCheckUpdates}
-              disabled={checking || loading}
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-md transition-all disabled:opacity-50 shadow-xs"
+              onClick={handleCheck}
+              disabled={checking}
+              className="btn-ghost"
             >
-              <BellRing className={`w-3.5 h-3.5 ${checking ? "animate-pulse" : ""}`} />
-              <span>{checking ? "Checking RBI Portal..." : "Check for Updates"}</span>
+              <RefreshCw
+                className={`h-4 w-4 ${checking ? "animate-spin" : ""}`}
+              />
+              {checking ? "Checking…" : "Check for updates"}
             </button>
             <button
               onClick={handleScrape}
-              disabled={scraping || loading}
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 active:scale-[0.99] rounded-md transition-all disabled:opacity-50 shadow-xs"
+              disabled={scraping}
+              className="btn-primary"
             >
-              <DownloadCloud className={`w-3.5 h-3.5 ${scraping ? "animate-bounce" : ""}`} />
-              <span>{scraping ? "Ingesting Documents..." : "Run New Scrape"}</span>
+              {scraping ? "Scraping…" : "Re-scrape corpus"}
             </button>
-          </div>
+          </>
+        }
+      />
+
+      {error && (
+        <div className="mb-4">
+          <ErrorBox>{error}</ErrorBox>
+        </div>
+      )}
+      {ok && (
+        <div className="mb-4">
+          <OkBox>{ok}</OkBox>
+        </div>
+      )}
+
+      {/* change alerts */}
+      <div className="mb-8">
+        <div className="mb-3 flex items-center gap-2">
+          <BellRing className="h-4 w-4 text-[#b45309]" />
+          <h2 className="font-display text-2xl">Change alerts</h2>
+          {unseen.length > 0 && (
+            <span className="rounded-full bg-[#b91c1c] px-2.5 py-0.5 text-xs font-bold text-white">
+              {unseen.length} new
+            </span>
+          )}
         </div>
 
-        {/* Check status line */}
-        {checkMsg && (
-          <div className="px-6 py-2 bg-slate-50/70 border-b border-slate-200/60 text-[11px] font-medium text-slate-600">
-            {checkMsg}
-          </div>
-        )}
-
-        {/* Live Update Alerts */}
-        {unseenAlerts.length > 0 && (
-          <div className="px-6 py-4 bg-amber-50/60 border-b border-amber-200/60 space-y-2">
-            <div className="flex items-center gap-2">
-              <BellRing className="w-4 h-4 text-amber-600" />
-              <p className="text-xs font-bold text-amber-800">
-                {unseenAlerts.length} circular update(s) detected
-              </p>
-            </div>
-            {unseenAlerts.map((a) => (
-              <div
+        {alerts.length === 0 ? (
+          <EmptyState
+            title="No changes detected"
+            desc="The monitor snapshots every source and alerts when content changes. Run a check to verify."
+          />
+        ) : (
+          <div className="space-y-3">
+            {unseen.map((a) => (
+              <Card
                 key={a.id}
-                className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-white border border-amber-200/70"
+                className="border-l-4 !border-l-[#b45309]"
               >
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold text-slate-800 truncate">
-                    {a.source_name}
-                  </p>
-                  <p className="text-[11px] text-slate-500">
-                    {a.summary} • {new Date(a.detected_at).toLocaleString()}
-                  </p>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="font-semibold">
+                      {a.title ?? "Source changed"}
+                    </p>
+                    <p className="mono mt-1 break-all text-xs text-[#a8a29e]">
+                      {a.url}
+                    </p>
+                    {a.note && (
+                      <p className="mt-2 text-sm text-[#78716c]">{a.note}</p>
+                    )}
+                    <p className="mono mt-2 text-xs text-[#a8a29e]">
+                      detected {new Date(a.detected_at).toLocaleString()}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => markSeen(a.id)}
+                    className="btn-ghost shrink-0"
+                  >
+                    Mark as seen
+                  </button>
                 </div>
-                <button
-                  onClick={() => handleMarkSeen(a.id)}
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 hover:text-amber-900 px-2 py-1 rounded border border-amber-200 hover:bg-amber-50 shrink-0"
-                >
-                  <CheckCheck className="w-3 h-3" />
-                  Mark read
-                </button>
-              </div>
+              </Card>
             ))}
+            {seen.length > 0 && (
+              <details>
+                <summary className="cursor-pointer text-sm text-[#78716c] hover:text-[#1c1917]">
+                  {seen.length} acknowledged alert{seen.length === 1 ? "" : "s"}
+                </summary>
+                <div className="mt-3 space-y-3 opacity-70">
+                  {seen.map((a) => (
+                    <Card key={a.id}>
+                      <p className="text-sm font-medium">
+                        {a.title ?? "Source changed"}
+                      </p>
+                      <p className="mono mt-1 break-all text-xs text-[#a8a29e]">
+                        {a.url}
+                      </p>
+                    </Card>
+                  ))}
+                </div>
+              </details>
+            )}
           </div>
         )}
+      </div>
 
-        {/* Stats Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 border-b border-slate-200/80 divide-x divide-slate-100">
-          <div className="px-6 py-3.5">
-            <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">
-              Source Documents
-            </p>
-            <div className="flex items-baseline gap-2 mt-0.5">
-              <span className="text-xl font-bold tracking-tight text-slate-900 font-mono">
-                {loading ? "—" : circulars.length}
-              </span>
-              <span className="text-[10px] text-slate-400">Unique files</span>
-            </div>
-          </div>
-
-          <div className="px-6 py-3.5">
-            <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">
-              Total Chunks
-            </p>
-            <div className="flex items-baseline gap-2 mt-0.5">
-              <span className="text-xl font-bold tracking-tight text-blue-600 font-mono">
-                {loading ? "—" : totalChunksCount.toLocaleString()}
-              </span>
-              <span className="text-[10px] text-blue-500 font-medium">Embeddings</span>
-            </div>
-          </div>
-
-          <div className="px-6 py-3.5">
-            <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">
-              Avg Chunks / Doc
-            </p>
-            <div className="flex items-baseline gap-2 mt-0.5">
-              <span className="text-xl font-bold tracking-tight text-slate-900 font-mono">
-                {loading || circulars.length === 0
-                  ? "—"
-                  : Math.round(totalChunksCount / circulars.length)}
-              </span>
-              <span className="text-[10px] text-slate-400">Density</span>
-            </div>
-          </div>
-
-          <div className="px-6 py-3.5">
-            <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">
-              Index Health
-            </p>
-            <div className="flex items-baseline gap-1.5 mt-0.5">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-              </span>
-              <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider">
-                Synchronized
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Filter Strip */}
-        <div className="px-6 py-2.5 bg-slate-50/50 border-b border-slate-200/80 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
-          <div className="relative max-w-sm w-full">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Filter by source name or URL..."
-              className="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-slate-900 text-slate-900 placeholder:text-slate-400 transition"
-            />
-          </div>
-
-          <span className="text-[11px] text-slate-400 font-mono self-center sm:self-auto">
-            Grouped by source_name • 1 record per document
-          </span>
-        </div>
-
-        {/* Error Alert */}
-        {error && (
-          <div className="m-6 flex items-start gap-2.5 p-3 rounded-md bg-rose-50 border border-rose-200 text-rose-700 text-xs">
-            <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 mt-0.5" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        {/* Dense Table Layout */}
-        <div className="flex-1 overflow-x-auto">
-          {loading ? (
-            <div className="py-24 text-center">
-              <RefreshCw className="w-5 h-5 text-slate-400 animate-spin mx-auto mb-2" />
-              <p className="text-xs font-semibold text-slate-600">
-                Fetching chunked regulatory circulars...
-              </p>
-            </div>
-          ) : filteredCirculars.length === 0 ? (
-            <div className="py-20 text-center text-xs text-slate-400">
-              <Database className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-              <p className="font-semibold text-slate-700 text-sm">No circular sources available</p>
-              <p className="text-slate-400 mt-1">
-                {circulars.length === 0
-                  ? "Click 'Run New Scrape' to fetch and vectorize circulars from RBI portal."
-                  : "No sources matched your search filter."}
-              </p>
-            </div>
-          ) : (
-            <table className="w-full text-left text-xs border-collapse">
+      {/* indexed circulars */}
+      <h2 className="font-display mb-3 text-2xl">Indexed circulars</h2>
+      {circulars.length === 0 ? (
+        <EmptyState
+          title="Corpus is empty"
+          desc="Run a scrape to pull RBI circulars into the index."
+          action={
+            <button
+              onClick={handleScrape}
+              disabled={scraping}
+              className="btn-primary"
+            >
+              {scraping ? "Scraping…" : "Scrape now"}
+            </button>
+          }
+        />
+      ) : (
+        <Card>
+          <div className="overflow-x-auto">
+            <table className="data-table">
               <thead>
-                <tr className="border-b border-slate-200 text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-white">
-                  <th className="py-3 px-6 font-medium">Source Document Name</th>
-                  <th className="py-3 px-6 font-medium text-center">Indexed Chunks</th>
-                  <th className="py-3 px-6 font-medium">Earliest Scraped At</th>
-                  <th className="py-3 px-6 font-medium text-right">Source Link</th>
+                <tr>
+                  <th>Title</th>
+                  <th>Chunks</th>
+                  <th>Scraped</th>
+                  <th>Source</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredCirculars.map((item, idx) => (
-                  <tr
-                    key={`${item.source_name}-${idx}`}
-                    className="hover:bg-slate-50/75 transition-colors group"
-                  >
-                    {/* Source Name */}
-                    <td className="py-3.5 px-6 max-w-md">
-                      <div className="flex items-center gap-2.5">
-                        <FileText className="w-4 h-4 text-slate-400 shrink-0 group-hover:text-blue-600 transition-colors" />
-                        <span
-                          className="font-medium text-slate-900 truncate"
-                          title={item.source_name}
-                        >
-                          {item.source_name || "Untitled RBI Circular Document"}
-                        </span>
-                      </div>
+              <tbody>
+                {circulars.map((c) => (
+                  <tr key={c.id}>
+                    <td className="max-w-[280px] font-medium">{c.title}</td>
+                    <td className="mono">{c.chunk_count}</td>
+                    <td className="mono whitespace-nowrap">
+                      {new Date(c.scraped_at).toLocaleDateString()}
                     </td>
-
-                    {/* Total Chunks */}
-                    <td className="py-3.5 px-6 text-center">
-                      <span className="inline-flex items-center gap-1.5 font-mono text-[11px] font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200/60">
-                        <Layers className="w-3 h-3" />
-                        {item.total_chunks} chunks
-                      </span>
-                    </td>
-
-                    {/* Scraped At */}
-                    <td className="py-3.5 px-6 text-slate-500 font-mono text-[11px]">
-                      <div className="flex items-center gap-1.5">
-                        <Clock className="w-3.5 h-3.5 text-slate-400" />
-                        <span>{new Date(item.scraped_at).toLocaleDateString()}</span>
-                        <span className="text-slate-400 text-[10px]">
-                          {new Date(item.scraped_at).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      </div>
-                    </td>
-
-                    {/* Source URL Action */}
-                    <td className="py-3.5 px-6 text-right">
-                      {item.source_url ? (
-                        <a
-                          href={item.source_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-800 bg-blue-50/50 hover:bg-blue-50 px-2.5 py-1 rounded transition"
-                        >
-                          <span>Open Document</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      ) : (
-                        <span className="text-slate-400 font-mono text-[11px]">—</span>
-                      )}
+                    <td>
+                      <a
+                        href={c.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[#b45309] underline underline-offset-4 hover:text-[#92400e]"
+                      >
+                        Open
+                      </a>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          )}
-        </div>
-
-        {/* Footer Bar */}
-        {!loading && filteredCirculars.length > 0 && (
-          <div className="px-6 py-2.5 border-t border-slate-200/80 bg-white flex items-center justify-between text-[11px] text-slate-400">
-            <span>
-              Showing <strong className="text-slate-700">{filteredCirculars.length}</strong> of{" "}
-              {circulars.length} circular source files
-            </span>
-            <span className="font-mono">
-              Total vectorized corpus: {totalChunksCount.toLocaleString()} chunks
-            </span>
           </div>
-        )}
-
-      </div>
-    </AppLayout>
+        </Card>
+      )}
+    </>
   );
 }

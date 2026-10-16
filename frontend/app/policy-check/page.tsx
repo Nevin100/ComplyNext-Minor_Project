@@ -1,374 +1,271 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import axios from "axios";
-import { getToken } from "@/lib/auth";
-import AppLayout from "@/components/AppLayout";
+import { useEffect, useRef, useState } from "react";
+import { api } from "@/lib/api";
 import {
-  UploadCloud,
-  FileSearch,
-  FileText,
-  Play,
-  ExternalLink,
-  Hash,
-  ShieldCheck,
-  ShieldAlert,
-  AlertTriangle,
-  CheckCircle2,
-  AlertCircle,
-  Sparkles,
-} from "lucide-react";
+  Card,
+  PageHeader,
+  Pill,
+  Spinner,
+  EmptyState,
+  ErrorBox,
+  OkBox,
+} from "@/components/ui";
+import { UploadCloud, FileText } from "lucide-react";
 
 interface PolicyDoc {
   id: number;
   filename: string;
   uploaded_at: string;
+  analyzed: boolean;
 }
 
-interface GapFinding {
+interface Gap {
   id: number;
-  policy_clause: string;
-  status: string;
+  clause_text: string;
+  verdict: string;
   explanation: string;
-  rbi_source_name?: string;
-  rbi_source_url?: string;
-  rbi_chunk_index?: number;
+  cited_passages: string | null;
 }
-
-const statusBadgeStyles: Record<string, string> = {
-  COMPLIANT: "bg-emerald-50 text-emerald-700 border-emerald-200/80",
-  GAP: "bg-rose-50 text-rose-700 border-rose-200/80",
-  OUTDATED: "bg-amber-50 text-amber-700 border-amber-200/80",
-};
-
-const statusIcons: Record<string, React.ReactNode> = {
-  COMPLIANT: <ShieldCheck className="w-3.5 h-3.5" />,
-  GAP: <ShieldAlert className="w-3.5 h-3.5" />,
-  OUTDATED: <AlertTriangle className="w-3.5 h-3.5" />,
-};
-
-const API = process.env.NEXT_PUBLIC_API_URL;
 
 export default function PolicyCheckPage() {
-  const router = useRouter();
-  const [authChecked, setAuthChecked] = useState(false);
-  const [policies, setPolicies] = useState<PolicyDoc[]>([]);
-  const [findings, setFindings] = useState<GapFinding[]>([]);
-  const [activePolicy, setActivePolicy] = useState<PolicyDoc | null>(null);
-  const [file, setFile] = useState<File | null>(null);
+  const [docs, setDocs] = useState<PolicyDoc[]>([]);
+  const [gaps, setGaps] = useState<Gap[]>([]);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
-  const [summary, setSummary] = useState<{ total: number; gaps: number } | null>(null);
-  const [msg, setMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [error, setError] = useState("");
+  const [ok, setOk] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  const fetchPolicies = async () => {
-    const token = getToken();
-    if (!token) return;
+  const fetchDocs = async () => {
     try {
-      const res = await axios.get(`${API}/api/policies`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setPolicies(res.data || []);
+      const res = await api.get("/api/policy/documents");
+      setDocs(res.data ?? []);
     } catch {
-      /* silent on first load */
+      setError("Could not load policy documents.");
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    const token = getToken();
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-    setAuthChecked(true);
-    fetchPolicies();
-  }, [router]);
+    fetchDocs();
+  }, []);
 
-  const handleUpload = async () => {
-    const token = getToken();
-    if (!token || !file) return;
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setError("");
+    setOk("");
     setUploading(true);
-    setMsg(null);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      await axios.post(`${API}/api/policies/upload`, formData, {
-        headers: { Authorization: `Bearer ${token}` },
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await api.post("/api/policy/upload", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
-      setMsg({ type: "success", text: `"${file.name}" uploaded. Ab Analyze dabao.` });
-      setFile(null);
-      fetchPolicies();
-    } catch (err: unknown) {
-      const detail =
-        axios.isAxiosError(err) ? err.response?.data?.detail : undefined;
-      setMsg({ type: "error", text: detail || "Upload failed." });
+      setOk(`Uploaded ${res.data?.filename ?? file.name}.`);
+      fetchDocs();
+    } catch {
+      setError("Upload failed. Only .txt and .pdf are supported.");
     } finally {
       setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
     }
   };
 
-  const handleAnalyze = async (policy: PolicyDoc) => {
-    const token = getToken();
-    if (!token) return;
+  const handleAnalyze = async (id: number) => {
+    setError("");
+    setOk("");
     setAnalyzing(true);
-    setMsg(null);
-    setActivePolicy(policy);
     try {
-      const res = await axios.post(
-        `${API}/api/policies/${policy.id}/analyze`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setFindings(res.data.findings || []);
-      setSummary({ total: res.data.total_clauses, gaps: res.data.gaps_found });
-      setMsg({
-        type: "success",
-        text: `Analysis complete: ${res.data.gaps_found} gap(s) in ${res.data.total_clauses} clauses.`,
-      });
-    } catch (err: unknown) {
-      const detail =
-        axios.isAxiosError(err) ? err.response?.data?.detail : undefined;
-      setMsg({ type: "error", text: detail || "Analysis failed. GROQ_API_KEY check karo." });
+      const res = await api.post(`/api/policy/analyze/${id}`);
+      setSelected(id);
+      setGaps(res.data?.gaps ?? []);
+      setOk("Analysis complete.");
+      fetchDocs();
+    } catch {
+      setError("Analysis failed. Check the backend and Groq key.");
     } finally {
       setAnalyzing(false);
     }
   };
 
-  const handleViewFindings = async (policy: PolicyDoc) => {
-    const token = getToken();
-    if (!token) return;
-    setActivePolicy(policy);
-    setSummary(null);
+  const viewGaps = async (id: number) => {
+    setError("");
+    setSelected(id);
     try {
-      const res = await axios.get(`${API}/api/policies/${policy.id}/findings`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setFindings(res.data || []);
+      const res = await api.get(`/api/policy/gaps?document_id=${id}`);
+      setGaps(res.data?.gaps ?? []);
     } catch {
-      setMsg({ type: "error", text: "Could not load findings." });
+      setError("Could not load findings.");
     }
   };
 
-  if (!authChecked) return null;
+  if (loading) return <Spinner label="Loading policies…" />;
 
-  const gapCount = findings.filter((f) => f.status !== "COMPLIANT").length;
+  const gapCount = gaps.filter((g) => g.verdict === "GAP").length;
 
   return (
-    <AppLayout>
-      <div className="min-h-screen bg-white text-slate-900 flex flex-col font-sans">
-        {/* Subheader */}
-        <div className="border-b border-slate-200/80 px-6 py-4">
-          <div className="flex items-center gap-2">
-            <h1 className="text-lg font-bold text-slate-950 tracking-tight">
-              Policy Gap Detection
-            </h1>
-            <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200/70 flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-purple-600" />
-              LangGraph Multi-Agent
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Upload an internal policy document — retriever, comparer and explainer agents
-            check every clause against RBI circulars with citations.
-          </p>
+    <>
+      <PageHeader
+        eyebrow="Agentic review"
+        title="Policy gap check"
+        desc="Upload an internal policy (.txt/.pdf). Three LangGraph agents retrieve the relevant RBI passages, compare each clause, and explain the verdict with citations."
+      />
+
+      {error && (
+        <div className="mb-4">
+          <ErrorBox>{error}</ErrorBox>
         </div>
+      )}
+      {ok && (
+        <div className="mb-4">
+          <OkBox>{ok}</OkBox>
+        </div>
+      )}
 
-        <div className="p-6 max-w-7xl w-full mx-auto space-y-6">
-          {msg && (
-            <div
-              className={`p-3 rounded-lg text-xs flex items-start gap-2 border ${
-                msg.type === "success"
-                  ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                  : "bg-rose-50 border-rose-200 text-rose-800"
-              }`}
-            >
-              {msg.type === "success" ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-              ) : (
-                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-              )}
-              <span className="font-medium">{msg.text}</span>
-            </div>
-          )}
+      {/* upload */}
+      <Card className="mb-6">
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".txt,.pdf"
+          onChange={handleUpload}
+          className="hidden"
+        />
+        <button
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          className="flex w-full flex-col items-center gap-3 rounded-xl border-2 border-dashed border-[#e7e0d5] px-6 py-10 transition-colors hover:border-[#b45309] hover:bg-[#fef3e2]/40 disabled:opacity-50"
+        >
+          <UploadCloud className="h-8 w-8 text-[#b45309]" />
+          <span className="font-medium">
+            {uploading ? "Uploading…" : "Drop a policy document, or click to browse"}
+          </span>
+          <span className="mono text-xs text-[#a8a29e]">
+            .txt · .pdf · one policy per file
+          </span>
+        </button>
+      </Card>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* Upload card */}
-            <div className="lg:col-span-5 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="flex items-center gap-2 pb-4 border-b border-slate-100 mb-4">
-                <div className="h-7 w-7 rounded-md bg-purple-50 text-purple-600 flex items-center justify-center border border-purple-100">
-                  <UploadCloud className="w-4 h-4" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-bold text-slate-900 leading-none">
-                    Upload Policy Document
-                  </h2>
-                  <p className="text-[11px] text-slate-400 mt-0.5">.txt ya .pdf</p>
-                </div>
-              </div>
-
-              <label className="border-2 border-dashed border-slate-200 hover:border-purple-400 rounded-lg p-6 text-center flex flex-col items-center justify-center cursor-pointer transition-colors bg-slate-50/50 hover:bg-purple-50/20">
-                <FileText className="w-8 h-8 text-slate-400 mb-2" />
-                <span className="text-xs font-semibold text-slate-700">
-                  {file ? file.name : "Click to select policy file"}
-                </span>
-                <span className="text-[10px] text-slate-400 mt-1">
-                  Internal KYC / asset-classification policy
-                </span>
-                <input
-                  type="file"
-                  accept=".txt,.pdf"
-                  onChange={(e) => setFile(e.target.files?.[0] || null)}
-                  className="hidden"
-                />
-              </label>
-
-              <button
-                onClick={handleUpload}
-                disabled={!file || uploading}
-                className="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold py-2 rounded-md transition-all disabled:opacity-40"
-              >
-                {uploading ? "Uploading..." : "Upload Policy"}
-              </button>
-            </div>
-
-            {/* Policies list */}
-            <div className="lg:col-span-7 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="flex items-center gap-2 pb-4 border-b border-slate-100 mb-4">
-                <div className="h-7 w-7 rounded-md bg-slate-100 text-slate-700 flex items-center justify-center border border-slate-200">
-                  <FileSearch className="w-4 h-4" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-bold text-slate-900 leading-none">
-                    Your Policies
-                  </h2>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
-                    Run the 3-agent analysis on any uploaded document
-                  </p>
-                </div>
-              </div>
-
-              {policies.length === 0 ? (
-                <p className="text-xs text-slate-400 py-8 text-center">
-                  Koi policy upload nahi hui abhi. Pehle left se upload karo.
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {policies.map((p) => (
-                    <div
-                      key={p.id}
-                      className={`flex items-center justify-between p-3 rounded-lg border transition ${
-                        activePolicy?.id === p.id
-                          ? "border-purple-300 bg-purple-50/40"
-                          : "border-slate-200 hover:border-slate-300"
-                      }`}
-                    >
-                      <div className="min-w-0">
-                        <p className="text-xs font-semibold text-slate-800 truncate">
-                          {p.filename}
-                        </p>
-                        <p className="text-[10px] font-mono text-slate-400">
-                          {new Date(p.uploaded_at).toLocaleString()}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <button
-                          onClick={() => handleViewFindings(p)}
-                          className="text-[11px] font-semibold text-slate-600 hover:text-slate-950 px-2.5 py-1 rounded border border-slate-200 hover:bg-slate-50"
-                        >
-                          View
-                        </button>
-                        <button
-                          onClick={() => handleAnalyze(p)}
-                          disabled={analyzing}
-                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-white bg-slate-900 hover:bg-slate-800 px-2.5 py-1 rounded disabled:opacity-40"
-                        >
-                          <Play className="w-3 h-3" />
-                          {analyzing && activePolicy?.id === p.id ? "Analyzing..." : "Analyze"}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Findings */}
-          {(findings.length > 0 || summary) && (
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Gap Analysis {activePolicy ? `— ${activePolicy.filename}` : ""}
-                </h3>
-                {summary && (
-                  <span className="text-[11px] font-mono text-slate-500">
-                    {summary.gaps} gap(s) / {summary.total} clauses
-                  </span>
-                )}
-                {!summary && gapCount > 0 && (
-                  <span className="text-[11px] font-mono text-slate-500">
-                    {gapCount} gap(s) / {findings.length} clauses
-                  </span>
-                )}
-              </div>
-
-              <div className="space-y-3">
-                {findings.map((f) => (
-                  <div key={f.id} className="rounded-lg border border-slate-200 p-4 space-y-2.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <span
-                        className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2 py-0.5 rounded border ${
-                          statusBadgeStyles[f.status] || "bg-slate-100"
-                        }`}
-                      >
-                        {statusIcons[f.status]}
-                        {f.status}
-                      </span>
-                      {f.rbi_source_name && (
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200/80">
-                            <Hash className="w-3 h-3 text-slate-400" />
-                            Chunk #{f.rbi_chunk_index}
-                          </span>
-                          {f.rbi_source_url && (
-                            <a
-                              href={f.rbi_source_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-800 bg-blue-50/60 px-2.5 py-0.5 rounded border border-blue-200/50"
-                            >
-                              <span>Gazette Link</span>
-                              <ExternalLink className="w-3 h-3" />
-                            </a>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                        Policy clause
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* document list */}
+        <Card className="lg:col-span-1">
+          <h2 className="font-display mb-4 text-xl">Documents</h2>
+          {docs.length === 0 ? (
+            <EmptyState
+              title="No policies yet"
+              desc="Upload your first policy document above."
+            />
+          ) : (
+            <div className="space-y-2">
+              {docs.map((d) => (
+                <button
+                  key={d.id}
+                  onClick={() =>
+                    d.analyzed ? viewGaps(d.id) : handleAnalyze(d.id)
+                  }
+                  disabled={analyzing}
+                  className={`w-full rounded-xl border p-3 text-left transition-colors ${
+                    selected === d.id
+                      ? "border-[#b45309] bg-[#fef3e2]/50"
+                      : "border-[#e7e0d5] hover:border-[#a8a29e]"
+                  }`}
+                >
+                  <div className="flex items-start gap-2.5">
+                    <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#b45309]" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">
+                        {d.filename}
                       </p>
-                      <p className="text-xs text-slate-700 bg-slate-50/60 p-2.5 rounded border border-slate-150">
-                        {f.policy_clause}
+                      <p className="mono mt-1 text-[11px] text-[#a8a29e]">
+                        {new Date(d.uploaded_at).toLocaleDateString()} ·{" "}
+                        {d.analyzed ? "analyzed" : "not analyzed"}
                       </p>
-                    </div>
-
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                        Agent explanation {f.rbi_source_name && `— ${f.rbi_source_name}`}
-                      </p>
-                      <p className="text-xs text-slate-700 leading-relaxed">{f.explanation}</p>
                     </div>
                   </div>
+                  <span className="mono mt-2 block text-xs text-[#b45309]">
+                    {analyzing && selected === d.id
+                      ? "analyzing…"
+                      : d.analyzed
+                        ? "view findings →"
+                        : "run analysis →"}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        {/* findings */}
+        <div className="lg:col-span-2">
+          {selected === null ? (
+            <EmptyState
+              title="Select a document"
+              desc="Pick a policy to run the agents, or view its existing findings."
+            />
+          ) : gaps.length === 0 ? (
+            <EmptyState
+              title={analyzing ? "Agents are working…" : "No findings"}
+              desc={
+                analyzing
+                  ? "Retriever → comparer → explainer. This takes a moment."
+                  : "This policy has no analyzed findings yet."
+              }
+            />
+          ) : (
+            <>
+              <div className="mb-4 flex items-center gap-3">
+                <h2 className="font-display text-2xl">Findings</h2>
+                <Pill value={gapCount > 0 ? "GAP" : "COMPLIANT"} />
+                <span className="mono text-xs text-[#a8a29e]">
+                  {gapCount} gap{gapCount === 1 ? "" : "s"} ·{" "}
+                  {gaps.length - gapCount} compliant
+                </span>
+              </div>
+              <div className="space-y-4">
+                {gaps.map((g) => (
+                  <Card
+                    key={g.id}
+                    className={
+                      g.verdict === "GAP"
+                        ? "border-l-4 !border-l-[#b91c1c]"
+                        : "border-l-4 !border-l-[#047857]"
+                    }
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <Pill value={g.verdict} />
+                      <p className="mono text-xs text-[#a8a29e]">
+                        finding #{g.id}
+                      </p>
+                    </div>
+                    <blockquote className="mt-3 border-l-2 border-[#e7e0d5] pl-3 text-sm italic text-[#57534e]">
+                      “{g.clause_text}”
+                    </blockquote>
+                    <p className="mt-3 text-sm leading-relaxed">
+                      {g.explanation}
+                    </p>
+                    {g.cited_passages && (
+                      <details className="mt-3">
+                        <summary className="mono cursor-pointer text-xs text-[#b45309]">
+                          cited RBI passages
+                        </summary>
+                        <p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-[#78716c]">
+                          {g.cited_passages}
+                        </p>
+                      </details>
+                    )}
+                  </Card>
                 ))}
               </div>
-            </div>
+            </>
           )}
         </div>
       </div>
-    </AppLayout>
+    </>
   );
 }

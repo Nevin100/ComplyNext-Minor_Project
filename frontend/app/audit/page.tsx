@@ -2,215 +2,178 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import axios from "axios";
-import { getToken } from "@/lib/auth";
-import AppLayout from "@/components/AppLayout";
+import { api } from "@/lib/api";
 import {
-  ScrollText,
-  Download,
-  FileCheck2,
-  FileSearch,
-  RefreshCw,
-  AlertCircle,
-} from "lucide-react";
+  Card,
+  PageHeader,
+  Pill,
+  Spinner,
+  EmptyState,
+  ErrorBox,
+  OkBox,
+} from "@/components/ui";
+import { Download } from "lucide-react";
 
 interface AuditLog {
   id: number;
-  action_type: string;
-  input_ref?: string;
-  result_summary: string;
-  rule_reference?: string;
-  citation_url?: string;
+  action: string;
+  entity: string | null;
+  entity_id: number | null;
+  detail: string | null;
   created_at: string;
 }
 
-const actionBadgeStyles: Record<string, string> = {
-  classification: "bg-blue-50 text-blue-700 border-blue-200/80",
-  gap_analysis: "bg-purple-50 text-purple-700 border-purple-200/80",
-  scrape: "bg-emerald-50 text-emerald-700 border-emerald-200/80",
-};
-
-const actionIcons: Record<string, React.ReactNode> = {
-  classification: <FileCheck2 className="w-3.5 h-3.5" />,
-  gap_analysis: <FileSearch className="w-3.5 h-3.5" />,
-  scrape: <RefreshCw className="w-3.5 h-3.5" />,
-};
-
-const API = process.env.NEXT_PUBLIC_API_URL;
-
 export default function AuditPage() {
-  const router = useRouter();
-  const [authChecked, setAuthChecked] = useState(false);
   const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState("");
+  const [ok, setOk] = useState("");
+  const [exporting, setExporting] = useState(false);
+  const LIMIT = 25;
 
-  const fetchLogs = async () => {
-    const token = getToken();
-    if (!token) {
-      router.push("/login");
-      return;
-    }
+  const fetchLogs = async (p: number) => {
     setLoading(true);
-    setError("");
     try {
-      const res = await axios.get(`${API}/api/audit`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setLogs(res.data || []);
+      const res = await api.get(
+        `/api/audit/logs?limit=${LIMIT}&offset=${p * LIMIT}`
+      );
+      setLogs(res.data?.logs ?? []);
+      setTotal(res.data?.total ?? 0);
     } catch {
-      setError("Audit trail load nahi ho paya.");
+      setError("Could not load the audit trail.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    const token = getToken();
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-    setAuthChecked(true);
-    fetchLogs();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router]);
+    fetchLogs(page);
+  }, [page]);
 
-  const handleDownload = async () => {
-    const token = getToken();
-    if (!token) return;
-    setDownloading(true);
+  const handleExport = async () => {
+    setError("");
+    setOk("");
+    setExporting(true);
     try {
-      const res = await axios.get(`${API}/api/audit/export`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await api.get("/api/audit/export", {
         responseType: "blob",
       });
-      const url = window.URL.createObjectURL(
-        new Blob([res.data], { type: "application/pdf" })
-      );
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "complynext_audit_report.pdf";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "complynext-audit-report.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
       window.URL.revokeObjectURL(url);
+      setOk("Audit report downloaded.");
     } catch {
       setError("PDF export failed.");
     } finally {
-      setDownloading(false);
+      setExporting(false);
     }
   };
 
-  if (!authChecked) return null;
+  if (loading && logs.length === 0) return <Spinner label="Loading audit trail…" />;
+
+  const pages = Math.max(1, Math.ceil(total / LIMIT));
 
   return (
-    <AppLayout>
-      <div className="min-h-screen bg-white text-slate-900 flex flex-col font-sans">
-        {/* Subheader */}
-        <div className="border-b border-slate-200/80 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-lg font-bold text-slate-950 tracking-tight">
-                Explainable Audit Trail
-              </h1>
-              <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200/70 flex items-center gap-1">
-                <ScrollText className="w-3 h-3 text-slate-500" />
-                Timestamped
-              </span>
-            </div>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Har system decision ka traceable record — citation aur rule reference ke saath.
-            </p>
-          </div>
+    <>
+      <PageHeader
+        eyebrow="Accountability"
+        title="Audit trail"
+        desc="Every classification, analysis and scrape — timestamped, attributed to your institution, and exportable as a formal PDF."
+        actions={
           <button
-            onClick={handleDownload}
-            disabled={downloading || logs.length === 0}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-md transition disabled:opacity-40"
+            onClick={handleExport}
+            disabled={exporting || total === 0}
+            className="btn-primary"
           >
-            <Download className="w-3.5 h-3.5" />
-            {downloading ? "Generating PDF..." : "Download PDF Report"}
+            <Download className="h-4 w-4" />
+            {exporting ? "Exporting…" : "Export PDF"}
           </button>
+        }
+      />
+
+      {error && (
+        <div className="mb-4">
+          <ErrorBox>{error}</ErrorBox>
         </div>
+      )}
+      {ok && (
+        <div className="mb-4">
+          <OkBox>{ok}</OkBox>
+        </div>
+      )}
 
-        <div className="p-6 max-w-7xl w-full mx-auto">
-          {error && (
-            <div className="mb-4 flex items-start gap-2.5 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
-              <span className="font-medium">{error}</span>
-            </div>
-          )}
-
-          {loading ? (
-            <div className="py-24 text-center">
-              <span className="w-6 h-6 border-2 border-slate-400/30 border-t-slate-600 rounded-full animate-spin inline-block mb-3" />
-              <p className="text-xs font-semibold text-slate-700">Loading audit trail...</p>
-            </div>
-          ) : logs.length === 0 ? (
-            <div className="py-20 text-center text-xs text-slate-400">
-              <ScrollText className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-              <p className="font-semibold text-slate-700 text-sm">Abhi koi audit entries nahi</p>
-              <p className="text-slate-400 mt-1">
-                Dashboard pe classify chalao ya Policy Gap Check me analyze karo — har decision yahan log hoga.
-              </p>
-            </div>
-          ) : (
-            <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="bg-slate-50/80 border-b border-slate-200 text-left">
-                      <th className="px-4 py-2.5 font-bold text-slate-600 uppercase tracking-wider text-[10px]">
-                        Timestamp
-                      </th>
-                      <th className="px-4 py-2.5 font-bold text-slate-600 uppercase tracking-wider text-[10px]">
-                        Action
-                      </th>
-                      <th className="px-4 py-2.5 font-bold text-slate-600 uppercase tracking-wider text-[10px]">
-                        Input
-                      </th>
-                      <th className="px-4 py-2.5 font-bold text-slate-600 uppercase tracking-wider text-[10px]">
-                        Result
-                      </th>
-                      <th className="px-4 py-2.5 font-bold text-slate-600 uppercase tracking-wider text-[10px]">
-                        Reference
-                      </th>
+      {logs.length === 0 ? (
+        <EmptyState
+          title="Trail is empty"
+          desc="Actions you take — classifications, policy analyses, scrapes — will appear here."
+        />
+      ) : (
+        <>
+          <Card>
+            <div className="overflow-x-auto">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Action</th>
+                    <th>Entity</th>
+                    <th>Detail</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {logs.map((l) => (
+                    <tr key={l.id}>
+                      <td className="mono whitespace-nowrap">
+                        {new Date(l.created_at).toLocaleString()}
+                      </td>
+                      <td>
+                        <Pill value={l.action} />
+                      </td>
+                      <td className="mono whitespace-nowrap">
+                        {l.entity
+                          ? `${l.entity}${l.entity_id ? ` #${l.entity_id}` : ""}`
+                          : "—"}
+                      </td>
+                      <td className="max-w-[300px] truncate text-[#78716c]">
+                        {l.detail ?? "—"}
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {logs.map((log) => (
-                      <tr key={log.id} className="border-b border-slate-100 hover:bg-slate-50/50">
-                        <td className="px-4 py-2.5 font-mono text-[11px] text-slate-500 whitespace-nowrap">
-                          {new Date(log.created_at).toLocaleString()}
-                        </td>
-                        <td className="px-4 py-2.5">
-                          <span
-                            className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2 py-0.5 rounded border ${
-                              actionBadgeStyles[log.action_type] || "bg-slate-100"
-                            }`}
-                          >
-                            {actionIcons[log.action_type]}
-                            {log.action_type}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2.5 text-slate-600 max-w-[160px] truncate" title={log.input_ref}>
-                          {log.input_ref || "—"}
-                        </td>
-                        <td className="px-4 py-2.5 text-slate-700">{log.result_summary}</td>
-                        <td className="px-4 py-2.5 font-mono text-[11px] text-slate-500 max-w-[180px] truncate" title={log.rule_reference}>
-                          {log.rule_reference || "—"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          )}
-        </div>
-      </div>
-    </AppLayout>
+          </Card>
+
+          <div className="mt-4 flex items-center justify-between">
+            <p className="mono text-xs text-[#a8a29e]">
+              page {page + 1} of {pages} · {total} entries
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={page === 0}
+                className="btn-ghost"
+              >
+                ← Prev
+              </button>
+              <button
+                onClick={() => setPage((p) => Math.min(pages - 1, p + 1))}
+                disabled={page >= pages - 1}
+                className="btn-ghost"
+              >
+                Next →
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </>
   );
 }
