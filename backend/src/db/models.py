@@ -7,7 +7,7 @@ company - this linkage is the entire mechanism behind data isolation.
 """
 
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, Integer, String, Float, Text, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Float, Text, Boolean, ForeignKey, DateTime
 from sqlalchemy.sql import func
 
 from src.db.database import Base
@@ -26,7 +26,7 @@ class Company(Base):
     users = relationship("User", back_populates="company")
     loan_accounts = relationship("LoanAccount", back_populates="company")
     policy_documents = relationship("PolicyDocument", back_populates="company")
-
+    audit_logs = relationship("AuditLog", back_populates="company")
 
 class User(Base):
     """
@@ -114,3 +114,52 @@ class GapFinding(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     policy = relationship("PolicyDocument", back_populates="findings")
+
+class AuditLog(Base):
+    """
+    Explainable Audit Trail: system ke har decision ka timestamped record.
+    classification, gap_analysis ya scrape - jo bhi hua, yahan ek row.
+    Yahi table PDF report ka source hai.
+    """
+    __tablename__ = "audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
+    action_type = Column(String, nullable=False)   # classification | gap_analysis | scrape
+    input_ref = Column(String, nullable=True)      # e.g. "24 loan accounts" ya policy filename
+    result_summary = Column(Text, nullable=False)   # human-readable summary
+    rule_reference = Column(String, nullable=True)  # e.g. IRACP circular ka naam
+    citation_url = Column(String, nullable=True)    # RBI source link, jab relevant ho
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    company = relationship("Company", back_populates="audit_logs")
+
+class SourceSnapshot(Base):
+    """
+    Har RBI source ka last-seen content hash - change detection ka baseline.
+    Pehli check pe bas snapshot banta hai (alert nahi), uske baad har
+    check pe naya hash purane se compare hota hai.
+    """
+    __tablename__ = "source_snapshots"
+
+    id = Column(Integer, primary_key=True, index=True)
+    source_name = Column(String, unique=True, nullable=False)
+    source_url = Column(String, nullable=False)
+    content_hash = Column(String, nullable=False)
+    chunk_count = Column(Integer, nullable=False, default=0)
+    checked_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class ChangeAlert(Base):
+    """
+    Jab monitor ko kisi source me badlaav mile - circulars page pe
+    amber banner ke roop me dikhta hai, 'seen' hone tak.
+    """
+    __tablename__ = "change_alerts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    source_name = Column(String, nullable=False)
+    source_url = Column(String, nullable=True)
+    summary = Column(String, nullable=False)
+    seen = Column(Boolean, nullable=False, default=False)
+    detected_at = Column(DateTime(timezone=True), server_default=func.now())

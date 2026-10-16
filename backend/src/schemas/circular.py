@@ -16,3 +16,19 @@ class CircularSummary(BaseModel):
     source_url: str
     total_chunks: int
     scraped_at: datetime | None
+
+class ChangeAlertOut(BaseModel):
+    """Ek detected circular update - frontend banner isi pe chalta hai."""
+    id: int
+    source_name: str
+    source_url: str | None
+    summary: str
+    seen: bool
+    detected_at: datetime | None
+
+
+class CheckUpdatesResponse(BaseModel):
+    """POST /check-updates ka response."""
+    checked_sources: int
+    new_alerts: int
+    alerts: list[ChangeAlertOut]

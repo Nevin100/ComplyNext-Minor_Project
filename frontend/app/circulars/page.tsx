@@ -17,6 +17,8 @@ import {
   Database,
   Clock,
   RefreshCw,
+  BellRing,
+  CheckCheck,
 } from "lucide-react";
 
 interface CircularDocument {
@@ -24,6 +26,15 @@ interface CircularDocument {
   source_url: string;
   total_chunks: number;
   scraped_at: string;
+}
+
+interface ChangeAlert {
+  id: number;
+  source_name: string;
+  source_url?: string;
+  summary: string;
+  seen: boolean;
+  detected_at: string;
 }
 
 export default function CircularsPage() {
@@ -34,6 +45,9 @@ export default function CircularsPage() {
   const [scraping, setScraping] = useState(false);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [alerts, setAlerts] = useState<ChangeAlert[]>([]);
+  const [checking, setChecking] = useState(false);
+  const [checkMsg, setCheckMsg] = useState("");
 
   const fetchCirculars = (token: string) => {
     setLoading(true);
@@ -51,6 +65,15 @@ export default function CircularsPage() {
       .finally(() => setLoading(false));
   };
 
+  const fetchAlerts = (token: string) => {
+    axios
+      .get<ChangeAlert[]>(`${process.env.NEXT_PUBLIC_API_URL}/api/circulars/updates`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => setAlerts(res.data || []))
+      .catch(() => {});
+  };
+
   useEffect(() => {
     const token = getToken();
     if (!token) {
@@ -59,6 +82,7 @@ export default function CircularsPage() {
     }
     setAuthChecked(true);
     fetchCirculars(token);
+    fetchAlerts(token);
   }, [router]);
 
   const handleScrape = async () => {
@@ -79,6 +103,48 @@ export default function CircularsPage() {
       setScraping(false);
     }
   };
+
+  const handleCheckUpdates = async () => {
+    const token = getToken();
+    if (!token) return;
+    setChecking(true);
+    setCheckMsg("");
+    try {
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/circulars/check-updates`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setAlerts(res.data.alerts || []);
+      const n = res.data.new_alerts;
+      setCheckMsg(
+        n > 0
+          ? `${n} circular update(s) detected!`
+          : "Corpus in sync — koi naya change nahi."
+      );
+    } catch {
+      setCheckMsg("Update check failed. RBI portal reachability verify karo.");
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const handleMarkSeen = async (id: number) => {
+    const token = getToken();
+    if (!token) return;
+    try {
+      await axios.put(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/circulars/updates/${id}/seen`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setAlerts((prev) => prev.map((a) => (a.id === id ? { ...a, seen: true } : a)));
+    } catch {
+      /* silent */
+    }
+  };
+
+  const unseenAlerts = alerts.filter((a) => !a.seen);
 
   // Aggregate stats based on exact API schema
   const totalChunksCount = useMemo(() => {
@@ -101,7 +167,7 @@ export default function CircularsPage() {
   return (
     <AppLayout>
       <div className="min-h-screen bg-white text-slate-900 flex flex-col font-sans">
-        
+
         {/* Header Strip */}
         <div className="border-b border-slate-200/80 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -120,6 +186,14 @@ export default function CircularsPage() {
 
           <div className="flex items-center gap-2.5">
             <button
+              onClick={handleCheckUpdates}
+              disabled={checking || loading}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-md transition-all disabled:opacity-50 shadow-xs"
+            >
+              <BellRing className={`w-3.5 h-3.5 ${checking ? "animate-pulse" : ""}`} />
+              <span>{checking ? "Checking RBI Portal..." : "Check for Updates"}</span>
+            </button>
+            <button
               onClick={handleScrape}
               disabled={scraping || loading}
               className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 active:scale-[0.99] rounded-md transition-all disabled:opacity-50 shadow-xs"
@@ -129,6 +203,47 @@ export default function CircularsPage() {
             </button>
           </div>
         </div>
+
+        {/* Check status line */}
+        {checkMsg && (
+          <div className="px-6 py-2 bg-slate-50/70 border-b border-slate-200/60 text-[11px] font-medium text-slate-600">
+            {checkMsg}
+          </div>
+        )}
+
+        {/* Live Update Alerts */}
+        {unseenAlerts.length > 0 && (
+          <div className="px-6 py-4 bg-amber-50/60 border-b border-amber-200/60 space-y-2">
+            <div className="flex items-center gap-2">
+              <BellRing className="w-4 h-4 text-amber-600" />
+              <p className="text-xs font-bold text-amber-800">
+                {unseenAlerts.length} circular update(s) detected
+              </p>
+            </div>
+            {unseenAlerts.map((a) => (
+              <div
+                key={a.id}
+                className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-white border border-amber-200/70"
+              >
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-slate-800 truncate">
+                    {a.source_name}
+                  </p>
+                  <p className="text-[11px] text-slate-500">
+                    {a.summary} • {new Date(a.detected_at).toLocaleString()}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleMarkSeen(a.id)}
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 hover:text-amber-900 px-2 py-1 rounded border border-amber-200 hover:bg-amber-50 shrink-0"
+                >
+                  <CheckCheck className="w-3 h-3" />
+                  Mark read
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Stats Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 border-b border-slate-200/80 divide-x divide-slate-100">

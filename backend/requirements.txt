@@ -13,3 +13,5 @@ sentence-transformers
 langgraph
 groq
 pypdf
+reportlab
+apscheduler

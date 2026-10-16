@@ -4,7 +4,8 @@ defined in src/db/models.py. Safe to run multiple times - it only
 creates tables that don't already exist.
 """
 from src.db.database import engine, Base
-from src.db.models import Company, User, LoanAccount, PolicyDocument, GapFinding  # noqa: F401 (imports needed so Base knows about these tables)
+from src.db.models import Company, User, LoanAccount, PolicyDocument, GapFinding, AuditLog, SourceSnapshot, ChangeAlert  # noqa: F401 (imports needed so Base knows about these tables)
+
 
 if __name__ == "__main__":
     Base.metadata.create_all(bind=engine)

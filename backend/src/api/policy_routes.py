@@ -13,6 +13,7 @@ from src.db.models import PolicyDocument, GapFinding
 from src.schemas.policy import PolicyDocumentOut, GapFindingOut, AnalyzeResponse
 from src.auth.dependencies import get_current_user
 from src.agents.gap_graph import analyze_policy_text
+from src.api.audit_routes import log_action
 
 router = APIRouter(prefix="/api/policies", tags=["policies"])
 
@@ -103,6 +104,14 @@ def analyze_policy(
     rows = [GapFinding(policy_id=doc.id, **f) for f in findings]
     db.add_all(rows)
     db.commit()
+    log_action(
+    db,
+    company_id=current_user["company_id"],
+    action_type="gap_analysis",
+    input_ref=doc.filename,
+    result_summary=f"{gaps} gap(s) found in {len(findings)} policy clauses",
+    rule_reference="RBI Master Circulars (RAG corpus)",
+    )
 
     gaps = sum(1 for f in findings if f["status"] in ("GAP", "OUTDATED"))
     return AnalyzeResponse(

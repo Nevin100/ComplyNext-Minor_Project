@@ -10,7 +10,7 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
-from src.rules_engine.npa_engine import LoanAccount, AccountType, run_batch
+from src.rules_engine.npa_engine import LoanAccount, AccountType, run_batch, RULE_REF
 from src.api.auth_routes import router as auth_router
 from src.db.database import get_db
 from src.db.models import LoanAccount as DBLoanAccount
@@ -22,6 +22,11 @@ from src.api.loan_routes import router as loan_router
 from src.api.company_routes import router as company_router
 from src.api.circular_routes import router as circular_router
 from src.api.policy_routes import router as policy_router
+from src.api.audit_routes import router as audit_router, log_action
+
+from apscheduler.schedulers.background import BackgroundScheduler
+from src.db.database import SessionLocal
+from src.monitor.change_monitor import check_for_updates
 
 app = FastAPI(title="ComplyNext API")
 
@@ -39,6 +44,33 @@ app.include_router(loan_router)
 app.include_router(company_router)
 app.include_router(circular_router)
 app.include_router(policy_router)
+app.include_router(audit_router)
+
+_scheduler = BackgroundScheduler()
+
+
+def _scheduled_circular_check():
+    """Har 12 ghante me RBI sources me badlaav check karo (background)."""
+    db = SessionLocal()
+    try:
+        check_for_updates(db)
+    except Exception as e:
+        print(f"[SCHEDULER] circular check failed: {e}")
+    finally:
+        db.close()
+
+
+@app.on_event("startup")
+def _start_background_jobs():
+    _scheduler.add_job(_scheduled_circular_check, "interval", hours=12)
+    _scheduler.start()
+    print("[SCHEDULER] circular change monitor started (every 12h)")
+
+
+@app.on_event("shutdown")
+def _stop_background_jobs():
+    _scheduler.shutdown(wait=False)
+
 
 @app.get("/")
 def health_check():
@@ -76,6 +108,16 @@ def get_classifications(
     ]
 
     results = run_batch(accounts_for_engine)
+    mismatched = sum(1 for r in results if r.is_misclassified)
+    log_action(
+    db,
+    company_id=current_user["company_id"],
+    action_type="classification",
+    input_ref=f"{len(results)} loan accounts",
+    result_summary=f"{mismatched} of {len(results)} accounts misclassified in existing records",
+    rule_reference=RULE_REF,
+)
+
     return [r.__dict__ for r in results]
 
 @app.get("/api/search-circulars", response_model=list[CircularSearchResult])
