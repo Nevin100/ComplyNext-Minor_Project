@@ -12,10 +12,10 @@ import {
 import { Search as SearchIcon } from "lucide-react";
 
 interface SearchResult {
-  chunk_id: string;
+  source_name: string;
   source_url: string;
+  chunk_index: number;
   text: string;
-  score: number;
 }
 
 export default function SearchPage() {
@@ -32,8 +32,10 @@ export default function SearchPage() {
     setError("");
     setSearched(true);
     try {
-      const res = await api.post("/api/search-circulars", { query });
-      setResults(res.data?.results ?? []);
+      const res = await api.get("/api/search-circulars", {
+        params: { query },
+      });
+      setResults(res.data ?? []);
     } catch {
       setError("Search failed. Is the backend running?");
       setResults([]);
@@ -93,18 +95,26 @@ export default function SearchPage() {
           </p>
           <div className="space-y-4">
             {results.map((r, i) => (
-              <Card key={r.chunk_id ?? i}>
+              <Card key={`${r.source_name}-${r.chunk_index}-${i}`}>
                 <div className="flex items-center justify-between gap-3">
                   <p className="eyebrow">Passage {i + 1}</p>
                   <p className="mono text-xs text-[#a8a29e]">
-                    score {r.score?.toFixed(3)}
+                    chunk #{r.chunk_index}
                   </p>
                 </div>
                 <p className="mt-3 text-sm leading-relaxed text-[#57534e]">
                   {r.text}
                 </p>
-                <div className="mono mt-3 break-all border-t border-[#f0ebe1] pt-3 text-xs text-[#a8a29e]">
-                  source: {r.source_url}
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[#f0ebe1] pt-3">
+                  <p className="text-xs font-medium">{r.source_name}</p>
+                  <a
+                    href={r.source_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mono break-all text-xs text-[#b45309] underline underline-offset-4"
+                  >
+                    open source
+                  </a>
                 </div>
               </Card>
             ))}

@@ -104,6 +104,8 @@ def analyze_policy(
     rows = [GapFinding(policy_id=doc.id, **f) for f in findings]
     db.add_all(rows)
     db.commit()
+    
+    gaps = sum(1 for f in findings if f["status"] in ("GAP", "OUTDATED"))
     log_action(
     db,
     company_id=current_user["company_id"],
@@ -113,7 +115,6 @@ def analyze_policy(
     rule_reference="RBI Master Circulars (RAG corpus)",
     )
 
-    gaps = sum(1 for f in findings if f["status"] in ("GAP", "OUTDATED"))
     return AnalyzeResponse(
         policy_id=doc.id,
         total_clauses=len(findings),

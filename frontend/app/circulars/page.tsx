@@ -14,20 +14,19 @@ import {
 import { BellRing, RefreshCw } from "lucide-react";
 
 interface Circular {
-  id: number;
-  title: string;
-  url: string;
-  scraped_at: string;
-  chunk_count: number;
+  source_name: string;
+  source_url: string;
+  total_chunks: number;
+  scraped_at: string | null;
 }
 
 interface Alert {
   id: number;
-  url: string;
-  title: string | null;
-  detected_at: string;
-  note: string | null;
+  source_name: string;
+  source_url: string | null;
+  summary: string;
   seen: boolean;
+  detected_at: string | null;
 }
 
 export default function CircularsPage() {
@@ -42,7 +41,7 @@ export default function CircularsPage() {
   const fetchAll = async () => {
     try {
       const [c, a] = await Promise.all([
-        api.get("/api/circulars/list"),
+        api.get("/api/circulars"),
         api.get("/api/circulars/updates"),
       ]);
       setCirculars(c.data ?? []);
@@ -169,24 +168,21 @@ export default function CircularsPage() {
         ) : (
           <div className="space-y-3">
             {unseen.map((a) => (
-              <Card
-                key={a.id}
-                className="border-l-4 !border-l-[#b45309]"
-              >
+              <Card key={a.id} className="border-l-4 !border-l-[#b45309]">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
-                    <p className="font-semibold">
-                      {a.title ?? "Source changed"}
-                    </p>
-                    <p className="mono mt-1 break-all text-xs text-[#a8a29e]">
-                      {a.url}
-                    </p>
-                    {a.note && (
-                      <p className="mt-2 text-sm text-[#78716c]">{a.note}</p>
+                    <p className="font-semibold">{a.source_name}</p>
+                    {a.source_url && (
+                      <p className="mono mt-1 break-all text-xs text-[#a8a29e]">
+                        {a.source_url}
+                      </p>
                     )}
-                    <p className="mono mt-2 text-xs text-[#a8a29e]">
-                      detected {new Date(a.detected_at).toLocaleString()}
-                    </p>
+                    <p className="mt-2 text-sm text-[#78716c]">{a.summary}</p>
+                    {a.detected_at && (
+                      <p className="mono mt-2 text-xs text-[#a8a29e]">
+                        detected {new Date(a.detected_at).toLocaleString()}
+                      </p>
+                    )}
                   </div>
                   <button
                     onClick={() => markSeen(a.id)}
@@ -205,12 +201,8 @@ export default function CircularsPage() {
                 <div className="mt-3 space-y-3 opacity-70">
                   {seen.map((a) => (
                     <Card key={a.id}>
-                      <p className="text-sm font-medium">
-                        {a.title ?? "Source changed"}
-                      </p>
-                      <p className="mono mt-1 break-all text-xs text-[#a8a29e]">
-                        {a.url}
-                      </p>
+                      <p className="text-sm font-medium">{a.source_name}</p>
+                      <p className="mt-1 text-sm text-[#78716c]">{a.summary}</p>
                     </Card>
                   ))}
                 </div>
@@ -242,23 +234,27 @@ export default function CircularsPage() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Title</th>
+                  <th>Source</th>
                   <th>Chunks</th>
                   <th>Scraped</th>
-                  <th>Source</th>
+                  <th>Link</th>
                 </tr>
               </thead>
               <tbody>
-                {circulars.map((c) => (
-                  <tr key={c.id}>
-                    <td className="max-w-[280px] font-medium">{c.title}</td>
-                    <td className="mono">{c.chunk_count}</td>
+                {circulars.map((c, i) => (
+                  <tr key={`${c.source_name}-${i}`}>
+                    <td className="max-w-[280px] font-medium">
+                      {c.source_name}
+                    </td>
+                    <td className="mono">{c.total_chunks}</td>
                     <td className="mono whitespace-nowrap">
-                      {new Date(c.scraped_at).toLocaleDateString()}
+                      {c.scraped_at
+                        ? new Date(c.scraped_at).toLocaleDateString()
+                        : "—"}
                     </td>
                     <td>
                       <a
-                        href={c.url}
+                        href={c.source_url}
                         target="_blank"
                         rel="noreferrer"
                         className="text-[#b45309] underline underline-offset-4 hover:text-[#92400e]"

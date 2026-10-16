@@ -18,20 +18,21 @@ interface PolicyDoc {
   id: number;
   filename: string;
   uploaded_at: string;
-  analyzed: boolean;
 }
 
 interface Gap {
   id: number;
-  clause_text: string;
-  verdict: string;
+  policy_clause: string;
+  status: string;
   explanation: string;
-  cited_passages: string | null;
+  rbi_source_name: string | null;
+  rbi_source_url: string | null;
+  rbi_chunk_index: number | null;
 }
 
 export default function PolicyCheckPage() {
   const [docs, setDocs] = useState<PolicyDoc[]>([]);
-  const [gaps, setGaps] = useState<Gap[]>([]);
+  const [gaps, setGaps] = useState<Gap[] | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -42,7 +43,7 @@ export default function PolicyCheckPage() {
 
   const fetchDocs = async () => {
     try {
-      const res = await api.get("/api/policy/documents");
+      const res = await api.get("/api/policies");
       setDocs(res.data ?? []);
     } catch {
       setError("Could not load policy documents.");
@@ -64,7 +65,7 @@ export default function PolicyCheckPage() {
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await api.post("/api/policy/upload", fd, {
+      const res = await api.post("/api/policies/upload", fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setOk(`Uploaded ${res.data?.filename ?? file.name}.`);
@@ -81,14 +82,16 @@ export default function PolicyCheckPage() {
     setError("");
     setOk("");
     setAnalyzing(true);
+    setSelected(id);
     try {
-      const res = await api.post(`/api/policy/analyze/${id}`);
-      setSelected(id);
-      setGaps(res.data?.gaps ?? []);
-      setOk("Analysis complete.");
-      fetchDocs();
+      const res = await api.post(`/api/policies/${id}/analyze`);
+      setGaps(res.data?.findings ?? []);
+      setOk(
+        `Analysis complete: ${res.data?.gaps_found ?? 0} gap(s) in ${res.data?.total_clauses ?? 0} clauses.`
+      );
     } catch {
       setError("Analysis failed. Check the backend and Groq key.");
+      setGaps(null);
     } finally {
       setAnalyzing(false);
     }
@@ -96,10 +99,12 @@ export default function PolicyCheckPage() {
 
   const viewGaps = async (id: number) => {
     setError("");
+    setOk("");
     setSelected(id);
+    setGaps(null);
     try {
-      const res = await api.get(`/api/policy/gaps?document_id=${id}`);
-      setGaps(res.data?.gaps ?? []);
+      const res = await api.get(`/api/policies/${id}/findings`);
+      setGaps(res.data ?? []);
     } catch {
       setError("Could not load findings.");
     }
@@ -107,7 +112,7 @@ export default function PolicyCheckPage() {
 
   if (loading) return <Spinner label="Loading policies…" />;
 
-  const gapCount = gaps.filter((g) => g.verdict === "GAP").length;
+  const gapCount = (gaps ?? []).filter((g) => g.status === "GAP").length;
 
   return (
     <>
@@ -144,7 +149,9 @@ export default function PolicyCheckPage() {
         >
           <UploadCloud className="h-8 w-8 text-[#b45309]" />
           <span className="font-medium">
-            {uploading ? "Uploading…" : "Drop a policy document, or click to browse"}
+            {uploading
+              ? "Uploading…"
+              : "Drop a policy document, or click to browse"}
           </span>
           <span className="mono text-xs text-[#a8a29e]">
             .txt · .pdf · one policy per file
@@ -166,10 +173,7 @@ export default function PolicyCheckPage() {
               {docs.map((d) => (
                 <button
                   key={d.id}
-                  onClick={() =>
-                    d.analyzed ? viewGaps(d.id) : handleAnalyze(d.id)
-                  }
-                  disabled={analyzing}
+                  onClick={() => viewGaps(d.id)}
                   className={`w-full rounded-xl border p-3 text-left transition-colors ${
                     selected === d.id
                       ? "border-[#b45309] bg-[#fef3e2]/50"
@@ -183,17 +187,12 @@ export default function PolicyCheckPage() {
                         {d.filename}
                       </p>
                       <p className="mono mt-1 text-[11px] text-[#a8a29e]">
-                        {new Date(d.uploaded_at).toLocaleDateString()} ·{" "}
-                        {d.analyzed ? "analyzed" : "not analyzed"}
+                        {new Date(d.uploaded_at).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
                   <span className="mono mt-2 block text-xs text-[#b45309]">
-                    {analyzing && selected === d.id
-                      ? "analyzing…"
-                      : d.analyzed
-                        ? "view findings →"
-                        : "run analysis →"}
+                    view findings →
                   </span>
                 </button>
               ))}
@@ -206,58 +205,86 @@ export default function PolicyCheckPage() {
           {selected === null ? (
             <EmptyState
               title="Select a document"
-              desc="Pick a policy to run the agents, or view its existing findings."
+              desc="Pick a policy to view its findings, or run a fresh analysis."
             />
+          ) : analyzing ? (
+            <EmptyState
+              title="Agents are working…"
+              desc="Retriever → comparer → explainer. This takes a moment."
+            />
+          ) : gaps === null ? (
+            <Spinner label="Loading findings…" />
           ) : gaps.length === 0 ? (
             <EmptyState
-              title={analyzing ? "Agents are working…" : "No findings"}
-              desc={
-                analyzing
-                  ? "Retriever → comparer → explainer. This takes a moment."
-                  : "This policy has no analyzed findings yet."
+              title="No findings yet"
+              desc="This policy hasn't been analyzed. Run the agents to check it against RBI circulars."
+              action={
+                <button
+                  onClick={() => selected && handleAnalyze(selected)}
+                  disabled={analyzing}
+                  className="btn-primary"
+                >
+                  {analyzing ? "Analyzing…" : "Run analysis"}
+                </button>
               }
             />
           ) : (
             <>
-              <div className="mb-4 flex items-center gap-3">
+              <div className="mb-4 flex flex-wrap items-center gap-3">
                 <h2 className="font-display text-2xl">Findings</h2>
                 <Pill value={gapCount > 0 ? "GAP" : "COMPLIANT"} />
                 <span className="mono text-xs text-[#a8a29e]">
                   {gapCount} gap{gapCount === 1 ? "" : "s"} ·{" "}
                   {gaps.length - gapCount} compliant
                 </span>
+                <button
+                  onClick={() => selected && handleAnalyze(selected)}
+                  disabled={analyzing}
+                  className="btn-ghost ml-auto"
+                >
+                  {analyzing ? "Analyzing…" : "Re-run analysis"}
+                </button>
               </div>
               <div className="space-y-4">
                 {gaps.map((g) => (
                   <Card
                     key={g.id}
                     className={
-                      g.verdict === "GAP"
+                      g.status === "GAP"
                         ? "border-l-4 !border-l-[#b91c1c]"
                         : "border-l-4 !border-l-[#047857]"
                     }
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <Pill value={g.verdict} />
+                      <Pill value={g.status} />
                       <p className="mono text-xs text-[#a8a29e]">
                         finding #{g.id}
                       </p>
                     </div>
                     <blockquote className="mt-3 border-l-2 border-[#e7e0d5] pl-3 text-sm italic text-[#57534e]">
-                      “{g.clause_text}”
+                      “{g.policy_clause}”
                     </blockquote>
                     <p className="mt-3 text-sm leading-relaxed">
                       {g.explanation}
                     </p>
-                    {g.cited_passages && (
-                      <details className="mt-3">
-                        <summary className="mono cursor-pointer text-xs text-[#b45309]">
-                          cited RBI passages
-                        </summary>
-                        <p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-[#78716c]">
-                          {g.cited_passages}
-                        </p>
-                      </details>
+                    {(g.rbi_source_name || g.rbi_source_url) && (
+                      <div className="mono mt-3 border-t border-[#f0ebe1] pt-3 text-xs text-[#a8a29e]">
+                        <p>cited: {g.rbi_source_name ?? "RBI circular"}</p>
+                        {g.rbi_source_url && (
+                          <a
+                            href={g.rbi_source_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="break-all text-[#b45309] underline underline-offset-4"
+                          >
+                            {g.rbi_source_url}
+                          </a>
+                        )}
+                        {g.rbi_chunk_index !== null &&
+                          g.rbi_chunk_index !== undefined && (
+                            <p>chunk #{g.rbi_chunk_index}</p>
+                          )}
+                      </div>
                     )}
                   </Card>
                 ))}

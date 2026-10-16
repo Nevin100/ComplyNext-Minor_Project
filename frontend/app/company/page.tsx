@@ -17,6 +17,8 @@ interface Company {
   id: number;
   name: string;
   created_at: string;
+  total_users: number;
+  total_loan_accounts: number;
 }
 
 export default function CompanyPage() {
@@ -32,7 +34,7 @@ export default function CompanyPage() {
 
   const fetchCompany = async () => {
     try {
-      const res = await api.get("/api/company");
+      const res = await api.get("/api/company/me");
       setCompany(res.data);
       setName(res.data?.name ?? "");
     } catch {
@@ -52,7 +54,7 @@ export default function CompanyPage() {
     setOk("");
     setSaving(true);
     try {
-      const res = await api.put("/api/company", { name });
+      const res = await api.patch("/api/company/me", { name });
       setCompany(res.data);
       setEditing(false);
       setOk("Entity profile updated.");
@@ -67,7 +69,7 @@ export default function CompanyPage() {
     setError("");
     setDeleting(true);
     try {
-      await api.delete("/api/company");
+      await api.delete("/api/company/me");
       setCompany(null);
       setConfirmDelete(false);
       setOk("Entity profile deleted.");
@@ -115,6 +117,10 @@ export default function CompanyPage() {
                   entity id: {company.id} · registered{" "}
                   {new Date(company.created_at).toLocaleDateString()}
                 </p>
+                <p className="mono mt-1 text-xs text-[#a8a29e]">
+                  {company.total_users} user(s) · {company.total_loan_accounts}{" "}
+                  loan account(s)
+                </p>
               </div>
               <button
                 onClick={() => {
@@ -145,11 +151,7 @@ export default function CompanyPage() {
                     className="input"
                   />
                 </div>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="btn-primary"
-                >
+                <button type="submit" disabled={saving} className="btn-primary">
                   {saving ? "Saving…" : "Save changes"}
                 </button>
               </form>
@@ -170,8 +172,8 @@ export default function CompanyPage() {
           <Card className="border-[#fca5a5] lg:col-span-2">
             <h2 className="font-display text-xl text-[#b91c1c]">Danger zone</h2>
             <p className="mt-1.5 text-sm text-[#78716c]">
-              Deleting the entity profile removes the company record. This
-              action cannot be undone.
+              Deleting the entity profile also removes its users and loan
+              accounts. This action cannot be undone.
             </p>
             {!confirmDelete ? (
               <button

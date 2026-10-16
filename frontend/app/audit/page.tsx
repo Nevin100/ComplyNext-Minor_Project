@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -16,41 +15,36 @@ import { Download } from "lucide-react";
 
 interface AuditLog {
   id: number;
-  action: string;
-  entity: string | null;
-  entity_id: number | null;
-  detail: string | null;
+  action_type: string;
+  input_ref: string | null;
+  result_summary: string;
+  rule_reference: string | null;
   created_at: string;
 }
 
+const LIMIT = 25;
+
 export default function AuditPage() {
-  const [logs, setLogs] = useState<AuditLog[]>([]);
-  const [total, setTotal] = useState(0);
+  const [allLogs, setAllLogs] = useState<AuditLog[]>([]);
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
   const [exporting, setExporting] = useState(false);
-  const LIMIT = 25;
-
-  const fetchLogs = async (p: number) => {
-    setLoading(true);
-    try {
-      const res = await api.get(
-        `/api/audit/logs?limit=${LIMIT}&offset=${p * LIMIT}`
-      );
-      setLogs(res.data?.logs ?? []);
-      setTotal(res.data?.total ?? 0);
-    } catch {
-      setError("Could not load the audit trail.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
-    fetchLogs(page);
-  }, [page]);
+    const fetchLogs = async () => {
+      try {
+        const res = await api.get("/api/audit");
+        setAllLogs(res.data ?? []);
+      } catch {
+        setError("Could not load the audit trail.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLogs();
+  }, []);
 
   const handleExport = async () => {
     setError("");
@@ -76,9 +70,11 @@ export default function AuditPage() {
     }
   };
 
-  if (loading && logs.length === 0) return <Spinner label="Loading audit trail…" />;
+  if (loading) return <Spinner label="Loading audit trail…" />;
 
+  const total = allLogs.length;
   const pages = Math.max(1, Math.ceil(total / LIMIT));
+  const logs = allLogs.slice(page * LIMIT, page * LIMIT + LIMIT);
 
   return (
     <>
@@ -109,7 +105,7 @@ export default function AuditPage() {
         </div>
       )}
 
-      {logs.length === 0 ? (
+      {total === 0 ? (
         <EmptyState
           title="Trail is empty"
           desc="Actions you take — classifications, policy analyses, scrapes — will appear here."
@@ -123,8 +119,9 @@ export default function AuditPage() {
                   <tr>
                     <th>Time</th>
                     <th>Action</th>
-                    <th>Entity</th>
-                    <th>Detail</th>
+                    <th>Input</th>
+                    <th>Result</th>
+                    <th>Reference</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -134,15 +131,16 @@ export default function AuditPage() {
                         {new Date(l.created_at).toLocaleString()}
                       </td>
                       <td>
-                        <Pill value={l.action} />
+                        <Pill value={l.action_type} />
                       </td>
-                      <td className="mono whitespace-nowrap">
-                        {l.entity
-                          ? `${l.entity}${l.entity_id ? ` #${l.entity_id}` : ""}`
-                          : "—"}
+                      <td className="max-w-[180px] truncate text-[#78716c]">
+                        {l.input_ref ?? "—"}
                       </td>
-                      <td className="max-w-[300px] truncate text-[#78716c]">
-                        {l.detail ?? "—"}
+                      <td className="max-w-[280px] truncate text-[#78716c]">
+                        {l.result_summary}
+                      </td>
+                      <td className="mono max-w-[160px] truncate text-[#a8a29e]">
+                        {l.rule_reference ?? "—"}
                       </td>
                     </tr>
                   ))}

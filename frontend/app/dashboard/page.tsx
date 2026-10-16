@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -16,16 +15,14 @@ import {
   ArrowRight,
   FileSearch,
   FileText,
-  BellRing,
   ScrollText,
   FolderInput,
 } from "lucide-react";
 
 interface Stats {
   loans: number;
-  documents: number;
   policies: number;
-  gaps: number;
+  circulars: number;
   alerts: number;
   audit: number;
 }
@@ -65,22 +62,19 @@ export default function DashboardPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [loans, documents, policies, gaps, alerts, audit] =
-          await Promise.all([
-            api.get("/api/loans"),
-            api.get("/api/circulars/list"),
-            api.get("/api/policy/documents"),
-            api.get("/api/policy/gaps?limit=1"),
-            api.get("/api/circulars/updates?limit=1"),
-            api.get("/api/audit/logs?limit=1"),
-          ]);
+        const [loans, circulars, policies, alerts, audit] = await Promise.all([
+          api.get("/api/loan-accounts"),
+          api.get("/api/circulars"),
+          api.get("/api/policies"),
+          api.get("/api/circulars/updates"),
+          api.get("/api/audit"),
+        ]);
         setStats({
           loans: loans.data?.length ?? 0,
-          documents: documents.data?.length ?? 0,
+          circulars: circulars.data?.length ?? 0,
           policies: policies.data?.length ?? 0,
-          gaps: gaps.data?.total ?? 0,
-          alerts: alerts.data?.length ?? 0,
-          audit: audit.data?.total ?? 0,
+          alerts: (alerts.data ?? []).filter((a: { seen: boolean }) => !a.seen).length,
+          audit: audit.data?.length ?? 0,
         });
       } catch {
         setError("Could not load dashboard data. Is the backend running?");
@@ -120,12 +114,12 @@ export default function DashboardPage() {
             <p className="eyebrow">Policy documents</p>
             <p className="font-display mt-2 text-4xl">{stats.policies}</p>
             <p className="mt-1 text-sm text-[#78716c]">
-              <span className="mono">{stats.gaps}</span> gap findings open
+              uploaded for gap analysis
             </p>
           </Card>
           <Card>
             <p className="eyebrow">Regulatory corpus</p>
-            <p className="font-display mt-2 text-4xl">{stats.documents}</p>
+            <p className="font-display mt-2 text-4xl">{stats.circulars}</p>
             <p className="mt-1 text-sm text-[#78716c]">
               circulars indexed · <span className="mono">{stats.alerts}</span>{" "}
               unseen alerts

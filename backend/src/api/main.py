@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from src.rules_engine.npa_engine import LoanAccount, AccountType, run_batch, RULE_REF
 from src.api.auth_routes import router as auth_router
-from src.db.database import get_db
+from src.db.database import get_db, Base, engine
 from src.db.models import LoanAccount as DBLoanAccount
 from src.auth.dependencies import get_current_user
 from src.embeddings.vector_store import semantic_search
@@ -58,6 +58,14 @@ def _scheduled_circular_check():
         print(f"[SCHEDULER] circular check failed: {e}")
     finally:
         db.close()
+
+
+@app.on_event("startup")
+def _create_tables():
+    # Saare imported models ki tables banao (purani bani hui skip ho jayengi).
+    # Naye models (policy/audit/monitor) router imports se already load ho chuke hain.
+    Base.metadata.create_all(bind=engine)
+    print("[DB] tables ensured")
 
 
 @app.on_event("startup")

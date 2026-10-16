@@ -15,37 +15,47 @@ import {
 
 interface Loan {
   id: number;
-  account_no: string;
+  account_id: string;
   borrower_name: string;
   account_type: string;
   days_past_due: number;
-  outstanding: number;
-  computed_classification: string | null;
-  rule_reason: string | null;
+  outstanding_amount: number;
+  existing_classification: string | null;
+}
+
+interface ClassResult {
+  account_id: string;
+  borrower_name: string;
+  days_past_due: number;
+  computed_classification: string;
+  existing_classification: string | null;
+  is_misclassified: boolean;
+  rule_reference: string;
+  reasoning: string;
 }
 
 const EMPTY_FORM = {
-  account_no: "",
+  account_id: "",
   borrower_name: "",
   account_type: "term_loan",
   days_past_due: "",
-  outstanding: "",
+  outstanding_amount: "",
   existing_classification: "",
 };
 
 export default function ClassifyPage() {
   const [loans, setLoans] = useState<Loan[]>([]);
+  const [results, setResults] = useState<ClassResult[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
   const [form, setForm] = useState(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
-  const [classifyMsg, setClassifyMsg] = useState("");
   const [classifying, setClassifying] = useState(false);
 
   const fetchLoans = async () => {
     try {
-      const res = await api.get("/api/loans");
+      const res = await api.get("/api/loan-accounts");
       setLoans(res.data ?? []);
     } catch {
       setError("Could not load loan accounts.");
@@ -68,12 +78,12 @@ export default function ClassifyPage() {
     setOk("");
     setSubmitting(true);
     try {
-      await api.post("/api/loans", {
-        account_no: form.account_no,
+      await api.post("/api/loan-accounts", {
+        account_id: form.account_id,
         borrower_name: form.borrower_name,
         account_type: form.account_type,
         days_past_due: Number(form.days_past_due),
-        outstanding: Number(form.outstanding),
+        outstanding_amount: Number(form.outstanding_amount),
         existing_classification: form.existing_classification || null,
       });
       setForm(EMPTY_FORM);
@@ -87,15 +97,17 @@ export default function ClassifyPage() {
   };
 
   const handleClassify = async () => {
-    setClassifyMsg("");
+    setError("");
+    setOk("");
     setClassifying(true);
     try {
-      const res = await api.post("/api/classify");
-      setClassifyMsg(
-        res.data?.message ??
-          `${res.data?.length ?? 0} accounts re-classified against the current corpus.`
+      const res = await api.get("/api/classify");
+      const list: ClassResult[] = res.data ?? [];
+      setResults(list);
+      const mism = list.filter((r) => r.is_misclassified).length;
+      setOk(
+        `${list.length} accounts classified · ${mism} misclassified against existing records.`
       );
-      fetchLoans();
     } catch {
       setError("Classification run failed.");
     } finally {
@@ -105,9 +117,7 @@ export default function ClassifyPage() {
 
   if (loading) return <Spinner label="Loading loan accounts…" />;
 
-  const mismatches = loans.filter(
-    (l) => l.computed_classification && l.rule_reason?.startsWith("MISMATCH")
-  );
+  const mismatches = (results ?? []).filter((r) => r.is_misclassified);
 
   return (
     <>
@@ -136,11 +146,6 @@ export default function ClassifyPage() {
           <OkBox>{ok}</OkBox>
         </div>
       )}
-      {classifyMsg && (
-        <div className="mb-4">
-          <OkBox>{classifyMsg}</OkBox>
-        </div>
-      )}
       {mismatches.length > 0 && (
         <div className="mb-4">
           <ErrorBox>
@@ -156,10 +161,10 @@ export default function ClassifyPage() {
           <h2 className="font-display text-xl">New loan account</h2>
           <form onSubmit={handleAdd} className="mt-4 space-y-3">
             <div>
-              <label className="label">Account number</label>
+              <label className="label">Account ID</label>
               <input
-                name="account_no"
-                value={form.account_no}
+                name="account_id"
+                value={form.account_id}
                 onChange={handleChange}
                 required
                 className="input"
@@ -208,11 +213,11 @@ export default function ClassifyPage() {
               <div>
                 <label className="label">Outstanding (₹)</label>
                 <input
-                  name="outstanding"
+                  name="outstanding_amount"
                   type="number"
                   min={0}
                   step="0.01"
-                  value={form.outstanding}
+                  value={form.outstanding_amount}
                   onChange={handleChange}
                   required
                   className="input"
@@ -246,56 +251,127 @@ export default function ClassifyPage() {
           </form>
         </Card>
 
-        {/* table */}
-        <Card className="lg:col-span-2">
-          <h2 className="font-display mb-1 text-xl">Loan register</h2>
-          <p className="mb-4 text-sm text-[#78716c]">
-            <span className="mono">{loans.length}</span> accounts on record.
-          </p>
-          {loans.length === 0 ? (
-            <EmptyState
-              title="No accounts yet"
-              desc="Add your first loan account to run the classification engine."
-            />
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Account</th>
-                    <th>Borrower</th>
-                    <th>DPD</th>
-                    <th>Computed</th>
-                    <th>Rule basis</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loans.map((l) => (
-                    <tr key={l.id}>
-                      <td className="mono whitespace-nowrap font-medium">
-                        {l.account_no}
-                      </td>
-                      <td className="max-w-[160px] truncate">
-                        {l.borrower_name}
-                      </td>
-                      <td className="mono">{l.days_past_due}</td>
-                      <td>
-                        {l.computed_classification ? (
-                          <Pill value={l.computed_classification} />
-                        ) : (
-                          <span className="text-[#a8a29e]">—</span>
-                        )}
-                      </td>
-                      <td className="max-w-[220px] truncate text-[#78716c]">
-                        {l.rule_reason ?? "—"}
-                      </td>
+        {/* register + results */}
+        <div className="space-y-6 lg:col-span-2">
+          {results && (
+            <Card>
+              <h2 className="font-display mb-1 text-xl">
+                Latest classification run
+              </h2>
+              <p className="mb-4 text-sm text-[#78716c]">
+                <span className="mono">{results.length}</span> accounts run
+                through the IRACP engine.
+              </p>
+              <div className="overflow-x-auto">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Account</th>
+                      <th>DPD</th>
+                      <th>Computed</th>
+                      <th>Existing</th>
+                      <th>Flag</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {results.map((r) => (
+                      <tr key={r.account_id}>
+                        <td>
+                          <p className="mono font-medium">{r.account_id}</p>
+                          <p className="max-w-[140px] truncate text-xs text-[#78716c]">
+                            {r.borrower_name}
+                          </p>
+                        </td>
+                        <td className="mono">{r.days_past_due}</td>
+                        <td>
+                          <Pill value={r.computed_classification} />
+                        </td>
+                        <td className="text-[#78716c]">
+                          {r.existing_classification ?? "—"}
+                        </td>
+                        <td>
+                          {r.is_misclassified ? (
+                            <Pill value="GAP" />
+                          ) : (
+                            <span className="text-xs text-[#a8a29e]">match</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {results.some((r) => r.reasoning) && (
+                <details className="mt-4">
+                  <summary className="cursor-pointer text-sm text-[#78716c] hover:text-[#1c1917]">
+                    Rule reasoning per account
+                  </summary>
+                  <div className="mt-3 space-y-2">
+                    {results.map((r) => (
+                      <p
+                        key={r.account_id}
+                        className="text-xs leading-relaxed text-[#78716c]"
+                      >
+                        <span className="mono font-medium text-[#1c1917]">
+                          {r.account_id}
+                        </span>{" "}
+                        — {r.reasoning}
+                      </p>
+                    ))}
+                  </div>
+                </details>
+              )}
+            </Card>
           )}
-        </Card>
+
+          <Card>
+            <h2 className="font-display mb-1 text-xl">Loan register</h2>
+            <p className="mb-4 text-sm text-[#78716c]">
+              <span className="mono">{loans.length}</span> accounts on record.
+            </p>
+            {loans.length === 0 ? (
+              <EmptyState
+                title="No accounts yet"
+                desc="Add your first loan account to run the classification engine."
+              />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Account</th>
+                      <th>Borrower</th>
+                      <th>Type</th>
+                      <th>DPD</th>
+                      <th>Outstanding</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loans.map((l) => (
+                      <tr key={l.id}>
+                        <td className="mono whitespace-nowrap font-medium">
+                          {l.account_id}
+                        </td>
+                        <td className="max-w-[140px] truncate">
+                          {l.borrower_name}
+                        </td>
+                        <td className="whitespace-nowrap text-[#78716c]">
+                          {l.account_type === "term_loan"
+                            ? "Term loan"
+                            : "Revolving"}
+                        </td>
+                        <td className="mono">{l.days_past_due}</td>
+                        <td className="mono">
+                          ₹{Number(l.outstanding_amount).toLocaleString("en-IN")}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+        </div>
       </div>
 
       <p className="mono mt-6 text-xs text-[#a8a29e]">
