@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { UploadCloud } from "lucide-react";
 import { api } from "@/lib/api";
 import {
   Card,
@@ -52,6 +53,7 @@ export default function ClassifyPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [classifying, setClassifying] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const fetchLoans = async () => {
     try {
@@ -93,6 +95,56 @@ export default function ClassifyPage() {
       setError("Could not add the loan account.");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleCsv = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setError("");
+    setOk("");
+    setUploading(true);
+    try {
+      const text = await file.text();
+      const lines = text
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter(Boolean);
+      if (lines.length < 2) throw new Error("empty csv");
+      const header = lines[0].split(",").map((h) => h.trim());
+      const rows = lines
+        .slice(1)
+        .map((line) => {
+          const cols = line.split(",").map((c) => c.trim());
+          const row: Record<string, string> = {};
+          header.forEach((h, i) => (row[h] = cols[i] ?? ""));
+          return {
+            account_id: row.account_id,
+            borrower_name: row.borrower_name,
+            account_type: row.account_type || "term_loan",
+            days_past_due: Number(row.days_past_due),
+            outstanding_amount: Number(row.outstanding_amount),
+            existing_classification: row.existing_classification || null,
+          };
+        })
+        .filter(
+          (r) =>
+            r.account_id &&
+            r.borrower_name &&
+            !Number.isNaN(r.days_past_due) &&
+            !Number.isNaN(r.outstanding_amount)
+        );
+      if (rows.length === 0) throw new Error("no valid rows");
+      const res = await api.post("/api/loan-accounts/bulk", rows);
+      setOk(`${res.data?.length ?? rows.length} accounts uploaded from CSV.`);
+      fetchLoans();
+    } catch {
+      setError(
+        "CSV upload failed — header row must be: account_id, borrower_name, account_type, days_past_due, outstanding_amount, existing_classification"
+      );
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -156,100 +208,126 @@ export default function ClassifyPage() {
       )}
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* add form */}
-        <Card className="lg:col-span-1">
-          <h2 className="font-display text-xl">New loan account</h2>
-          <form onSubmit={handleAdd} className="mt-4 space-y-3">
-            <div>
-              <label className="label">Account ID</label>
-              <input
-                name="account_id"
-                value={form.account_id}
-                onChange={handleChange}
-                required
-                className="input"
-                placeholder="LN-0001"
-              />
-            </div>
-            <div>
-              <label className="label">Borrower name</label>
-              <input
-                name="borrower_name"
-                value={form.borrower_name}
-                onChange={handleChange}
-                required
-                className="input"
-                placeholder="Acme Traders"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
+        {/* add form + CSV upload */}
+        <div className="space-y-6 lg:col-span-1">
+          <Card>
+            <h2 className="font-display text-xl">New loan account</h2>
+            <form onSubmit={handleAdd} className="mt-4 space-y-3">
               <div>
-                <label className="label">Account type</label>
-                <select
-                  name="account_type"
-                  value={form.account_type}
-                  onChange={handleChange}
-                  className="input"
-                >
-                  <option value="term_loan">Term loan</option>
-                  <option value="revolving">Revolving / CC-OD</option>
-                </select>
-              </div>
-              <div>
-                <label className="label">Days past due</label>
+                <label className="label">Account ID</label>
                 <input
-                  name="days_past_due"
-                  type="number"
-                  min={0}
-                  value={form.days_past_due}
+                  name="account_id"
+                  value={form.account_id}
                   onChange={handleChange}
                   required
                   className="input"
-                  placeholder="0"
+                  placeholder="LN-0001"
                 />
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="label">Outstanding (₹)</label>
+                <label className="label">Borrower name</label>
                 <input
-                  name="outstanding_amount"
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  value={form.outstanding_amount}
+                  name="borrower_name"
+                  value={form.borrower_name}
                   onChange={handleChange}
                   required
                   className="input"
-                  placeholder="500000"
+                  placeholder="Acme Traders"
                 />
               </div>
-              <div>
-                <label className="label">Existing staging</label>
-                <select
-                  name="existing_classification"
-                  value={form.existing_classification}
-                  onChange={handleChange}
-                  className="input"
-                >
-                  <option value="">Unknown</option>
-                  <option value="Standard">Standard</option>
-                  <option value="SMA-0">SMA-0</option>
-                  <option value="SMA-1">SMA-1</option>
-                  <option value="SMA-2">SMA-2</option>
-                  <option value="NPA">NPA</option>
-                </select>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label">Account type</label>
+                  <select
+                    name="account_type"
+                    value={form.account_type}
+                    onChange={handleChange}
+                    className="input"
+                  >
+                    <option value="term_loan">Term loan</option>
+                    <option value="revolving">Revolving / CC-OD</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Days past due</label>
+                  <input
+                    name="days_past_due"
+                    type="number"
+                    min={0}
+                    value={form.days_past_due}
+                    onChange={handleChange}
+                    required
+                    className="input"
+                    placeholder="0"
+                  />
+                </div>
               </div>
-            </div>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="btn-primary w-full"
-            >
-              {submitting ? "Adding…" : "Add account"}
-            </button>
-          </form>
-        </Card>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label">Outstanding (₹)</label>
+                  <input
+                    name="outstanding_amount"
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={form.outstanding_amount}
+                    onChange={handleChange}
+                    required
+                    className="input"
+                    placeholder="500000"
+                  />
+                </div>
+                <div>
+                  <label className="label">Existing staging</label>
+                  <select
+                    name="existing_classification"
+                    value={form.existing_classification}
+                    onChange={handleChange}
+                    className="input"
+                  >
+                    <option value="">Unknown</option>
+                    <option value="Standard">Standard</option>
+                    <option value="SMA-0">SMA-0</option>
+                    <option value="SMA-1">SMA-1</option>
+                    <option value="SMA-2">SMA-2</option>
+                    <option value="NPA">NPA</option>
+                  </select>
+                </div>
+              </div>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="btn-primary w-full"
+              >
+                {submitting ? "Adding…" : "Add account"}
+              </button>
+            </form>
+          </Card>
+
+          <Card>
+            <h2 className="font-display text-xl">Bulk upload (CSV)</h2>
+            <p className="mt-1 text-sm text-[#587279]">
+              Add many accounts at once from a spreadsheet export.
+            </p>
+            <label className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#d8e6e3] bg-[#f2f7f6] p-6 text-center transition-colors hover:border-[#0b5563]">
+              <UploadCloud className="mb-2 h-6 w-6 text-[#0b5563]" />
+              <span className="text-sm font-medium">
+                {uploading ? "Uploading…" : "Click to choose a CSV file"}
+              </span>
+              <span className="mono mt-2 text-[11px] leading-relaxed text-[#93a8ad]">
+                account_id, borrower_name, account_type, days_past_due,
+                outstanding_amount, existing_classification
+              </span>
+              <input
+                type="file"
+                accept=".csv"
+                className="hidden"
+                onChange={handleCsv}
+                disabled={uploading}
+              />
+            </label>
+          </Card>
+        </div>
 
         {/* register + results */}
         <div className="space-y-6 lg:col-span-2">
