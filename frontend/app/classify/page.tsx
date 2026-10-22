@@ -258,7 +258,7 @@ export default function ClassifyPage() {
               <h2 className="font-display mb-1 text-xl">
                 Latest classification run
               </h2>
-              <p className="mb-4 text-sm text-[#78716c]">
+              <p className="mb-4 text-sm text-[#587279]">
                 <span className="mono">{results.length}</span> accounts run
                 through the IRACP engine.
               </p>
@@ -278,7 +278,7 @@ export default function ClassifyPage() {
                       <tr key={r.account_id}>
                         <td>
                           <p className="mono font-medium">{r.account_id}</p>
-                          <p className="max-w-[140px] truncate text-xs text-[#78716c]">
+                          <p className="max-w-[140px] truncate text-xs text-[#587279]">
                             {r.borrower_name}
                           </p>
                         </td>
@@ -286,14 +286,14 @@ export default function ClassifyPage() {
                         <td>
                           <Pill value={r.computed_classification} />
                         </td>
-                        <td className="text-[#78716c]">
+                        <td className="text-[#587279]">
                           {r.existing_classification ?? "—"}
                         </td>
                         <td>
                           {r.is_misclassified ? (
                             <Pill value="GAP" />
                           ) : (
-                            <span className="text-xs text-[#a8a29e]">match</span>
+                            <span className="text-xs text-[#93a8ad]">match</span>
                           )}
                         </td>
                       </tr>
@@ -303,16 +303,16 @@ export default function ClassifyPage() {
               </div>
               {results.some((r) => r.reasoning) && (
                 <details className="mt-4">
-                  <summary className="cursor-pointer text-sm text-[#78716c] hover:text-[#1c1917]">
+                  <summary className="cursor-pointer text-sm text-[#587279] hover:text-[#0e2a30]">
                     Rule reasoning per account
                   </summary>
                   <div className="mt-3 space-y-2">
                     {results.map((r) => (
                       <p
                         key={r.account_id}
-                        className="text-xs leading-relaxed text-[#78716c]"
+                        className="text-xs leading-relaxed text-[#587279]"
                       >
-                        <span className="mono font-medium text-[#1c1917]">
+                        <span className="mono font-medium text-[#0e2a30]">
                           {r.account_id}
                         </span>{" "}
                         — {r.reasoning}
@@ -326,7 +326,7 @@ export default function ClassifyPage() {
 
           <Card>
             <h2 className="font-display mb-1 text-xl">Loan register</h2>
-            <p className="mb-4 text-sm text-[#78716c]">
+            <p className="mb-4 text-sm text-[#587279]">
               <span className="mono">{loans.length}</span> accounts on record.
             </p>
             {loans.length === 0 ? (
@@ -355,7 +355,7 @@ export default function ClassifyPage() {
                         <td className="max-w-[140px] truncate">
                           {l.borrower_name}
                         </td>
-                        <td className="whitespace-nowrap text-[#78716c]">
+                        <td className="whitespace-nowrap text-[#587279]">
                           {l.account_type === "term_loan"
                             ? "Term loan"
                             : "Revolving"}
@@ -374,7 +374,7 @@ export default function ClassifyPage() {
         </div>
       </div>
 
-      <p className="mono mt-6 text-xs text-[#a8a29e]">
+      <p className="mono mt-6 text-xs text-[#93a8ad]">
         engine: deterministic IRACP · thresholds: 0 / 30 / 60 / 90 DPD (term),
         SMA-0/1/2 (revolving)
       </p>

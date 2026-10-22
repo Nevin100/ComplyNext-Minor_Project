@@ -59,30 +59,30 @@ export default function Home() {
   return (
     <div className="landing min-h-screen">
       {/* bulletin bar */}
-      <div className="bg-[#1c1917] px-4 py-2.5 text-center text-xs text-[#e7e0d5]">
-        <span className="mr-2 rounded bg-[#b45309] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+      <div className="bg-[#0e2a30] px-4 py-2.5 text-center text-xs text-[#d8e6e3]">
+        <span className="mr-2 rounded bg-[#0b5563] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
           Regulatory bulletin
         </span>
         Aligned with RBI IRACP Master Direction guidelines
       </div>
 
       {/* header */}
-      <header className="sticky top-0 z-50 border-b border-[#e7e0d5] bg-[#faf7f1]/95 backdrop-blur">
+      <header className="sticky top-0 z-50 border-b border-[#d8e6e3] bg-[#f2f7f6]/95 backdrop-blur">
         <nav className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2.5">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#1c1917] text-[#faf7f1]">
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#0e2a30] text-[#f2f7f6]">
               <ShieldCheck className="h-4 w-4" />
             </span>
             <span className="font-display text-xl">ComplyNext</span>
           </Link>
-          <div className="hidden items-center gap-8 text-sm text-[#57534e] md:flex">
-            <Link href="#platform" className="transition-colors hover:text-[#1c1917]">
+          <div className="hidden items-center gap-8 text-sm text-[#47616a] md:flex">
+            <Link href="#platform" className="transition-colors hover:text-[#0e2a30]">
               Platform
             </Link>
-            <Link href="#how" className="transition-colors hover:text-[#1c1917]">
+            <Link href="#how" className="transition-colors hover:text-[#0e2a30]">
               How it works
             </Link>
-            <Link href="#security" className="transition-colors hover:text-[#1c1917]">
+            <Link href="#security" className="transition-colors hover:text-[#0e2a30]">
               Security
             </Link>
           </div>
@@ -105,7 +105,7 @@ export default function Home() {
           <h1 className="font-display text-5xl leading-[1.05] md:text-7xl">
             Compliance that keeps up with the regulator.
           </h1>
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-[#78716c]">
+          <p className="mt-6 max-w-xl text-lg leading-relaxed text-[#587279]">
             ComplyNext watches RBI circulars, checks your policies against
             them, classifies your loan book by the exact prudential norms —
             and keeps a paper trail of everything.
@@ -119,7 +119,7 @@ export default function Home() {
               See the platform
             </Link>
           </div>
-          <div className="mono mt-10 flex flex-wrap gap-x-8 gap-y-2 text-xs text-[#a8a29e]">
+          <div className="mono mt-10 flex flex-wrap gap-x-8 gap-y-2 text-xs text-[#93a8ad]">
             <span>5 intelligence modules</span>
             <span>multi-tenant by design</span>
             <span>cited, auditable outputs</span>
@@ -128,7 +128,7 @@ export default function Home() {
       </section>
 
       {/* modules */}
-      <section id="platform" className="border-t border-[#e7e0d5]">
+      <section id="platform" className="border-t border-[#d8e6e3]">
         <div className="mx-auto w-full max-w-6xl px-6 py-16 md:py-20">
           <p className="eyebrow mb-3">The platform</p>
           <h2 className="font-display max-w-2xl text-3xl md:text-4xl">
@@ -139,29 +139,29 @@ export default function Home() {
               const Icon = m.icon;
               return (
                 <div key={m.title} className="panel panel-pad">
-                  <span className="grid h-10 w-10 place-items-center rounded-lg bg-[#fef3e2] text-[#b45309]">
+                  <span className="grid h-10 w-10 place-items-center rounded-lg bg-[#e0f0ee] text-[#0b5563]">
                     <Icon className="h-5 w-5" />
                   </span>
                   <h3 className="mt-4 text-lg font-semibold">{m.title}</h3>
-                  <p className="mt-1.5 text-sm leading-relaxed text-[#78716c]">
+                  <p className="mt-1.5 text-sm leading-relaxed text-[#587279]">
                     {m.desc}
                   </p>
                 </div>
               );
             })}
-            <div className="panel panel-pad flex flex-col justify-between bg-[#1c1917] text-[#faf7f1]">
+            <div className="panel panel-pad flex flex-col justify-between bg-[#0e2a30] text-[#f2f7f6]">
               <div>
                 <h3 className="font-display text-2xl">
                   Built for smaller institutions.
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-[#a8a29e]">
+                <p className="mt-2 text-sm leading-relaxed text-[#93a8ad]">
                   Enterprise RegTech, minus the enterprise price tag. Free
                   tiers, open components, zero license cost.
                 </p>
               </div>
               <Link
                 href="/signup"
-                className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-[#faf7f1] underline underline-offset-4"
+                className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-[#f2f7f6] underline underline-offset-4"
               >
                 Create your workspace <ArrowRight className="h-4 w-4" />
               </Link>
@@ -171,7 +171,7 @@ export default function Home() {
       </section>
 
       {/* how it works */}
-      <section id="how" className="border-t border-[#e7e0d5] bg-[#f5f0e8]/60">
+      <section id="how" className="border-t border-[#d8e6e3] bg-[#e9f2f0]/60">
         <div className="mx-auto w-full max-w-6xl px-6 py-16 md:py-20">
           <p className="eyebrow mb-3">How it works</p>
           <h2 className="font-display max-w-2xl text-3xl md:text-4xl">
@@ -180,9 +180,9 @@ export default function Home() {
           <div className="mt-10 grid gap-4 md:grid-cols-3">
             {STEPS.map((s) => (
               <div key={s.n} className="panel panel-pad">
-                <p className="mono text-sm text-[#b45309]">{s.n}</p>
+                <p className="mono text-sm text-[#0b5563]">{s.n}</p>
                 <h3 className="mt-3 text-lg font-semibold">{s.title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-[#78716c]">
+                <p className="mt-1.5 text-sm leading-relaxed text-[#587279]">
                   {s.desc}
                 </p>
               </div>
@@ -192,7 +192,7 @@ export default function Home() {
       </section>
 
       {/* security */}
-      <section id="security" className="border-t border-[#e7e0d5]">
+      <section id="security" className="border-t border-[#d8e6e3]">
         <div className="mx-auto w-full max-w-6xl px-6 py-16 md:py-20">
           <div className="grid gap-10 md:grid-cols-2 md:items-center">
             <div>
@@ -200,7 +200,7 @@ export default function Home() {
               <h2 className="font-display text-3xl md:text-4xl">
                 Your books stay yours.
               </h2>
-              <p className="mt-4 leading-relaxed text-[#78716c]">
+              <p className="mt-4 leading-relaxed text-[#587279]">
                 Multi-tenant isolation is enforced on every request — one
                 institution can never see another&apos;s data. Passwords are
                 bcrypt-hashed, sessions are signed tokens, and the audit
@@ -208,28 +208,28 @@ export default function Home() {
               </p>
               <Link
                 href="/privacy"
-                className="mt-4 inline-block text-sm font-medium text-[#b45309] underline underline-offset-4"
+                className="mt-4 inline-block text-sm font-medium text-[#0b5563] underline underline-offset-4"
               >
                 Read the privacy policy
               </Link>
             </div>
             <div className="panel panel-pad">
-              <p className="mono text-xs text-[#a8a29e]">isolation check</p>
+              <p className="mono text-xs text-[#93a8ad]">isolation check</p>
               <div className="mono mt-3 space-y-2 text-xs">
                 <p>
-                  <span className="text-[#047857]">✓</span> company_id from
+                  <span className="text-[#0e7c66]">✓</span> company_id from
                   signed token — never from client input
                 </p>
                 <p>
-                  <span className="text-[#047857]">✓</span> bcrypt password
+                  <span className="text-[#0e7c66]">✓</span> bcrypt password
                   hashing, JWT sessions
                 </p>
                 <p>
-                  <span className="text-[#047857]">✓</span> timestamped audit
+                  <span className="text-[#0e7c66]">✓</span> timestamped audit
                   log on every decision
                 </p>
                 <p>
-                  <span className="text-[#047857]">✓</span> exportable PDF
+                  <span className="text-[#0e7c66]">✓</span> exportable PDF
                   compliance reports
                 </p>
               </div>
@@ -239,12 +239,12 @@ export default function Home() {
       </section>
 
       {/* cta */}
-      <section className="border-t border-[#e7e0d5]">
+      <section className="border-t border-[#d8e6e3]">
         <div className="mx-auto flex w-full max-w-6xl flex-col items-center px-6 py-16 text-center md:py-20">
           <h2 className="font-display max-w-2xl text-4xl md:text-5xl">
             Stop tracking circulars by hand.
           </h2>
-          <p className="mt-4 max-w-md text-[#78716c]">
+          <p className="mt-4 max-w-md text-[#587279]">
             Set up your institution&apos;s workspace in a minute. Upload a policy,
             run the agents, see the gaps.
           </p>
@@ -261,10 +261,10 @@ export default function Home() {
       </section>
 
       {/* footer */}
-      <footer className="border-t border-[#e7e0d5]">
-        <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-4 px-6 py-8 text-xs text-[#a8a29e] sm:flex-row">
+      <footer className="border-t border-[#d8e6e3]">
+        <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-4 px-6 py-8 text-xs text-[#93a8ad] sm:flex-row">
           <div className="flex items-center gap-2">
-            <span className="grid h-6 w-6 place-items-center rounded-md bg-[#1c1917] text-[#faf7f1]">
+            <span className="grid h-6 w-6 place-items-center rounded-md bg-[#0e2a30] text-[#f2f7f6]">
               <ShieldCheck className="h-3 w-3" />
             </span>
             <span>
@@ -273,10 +273,10 @@ export default function Home() {
             </span>
           </div>
           <div className="flex items-center gap-5">
-            <Link href="/privacy" className="hover:text-[#1c1917]">
+            <Link href="/privacy" className="hover:text-[#0e2a30]">
               Privacy Policy
             </Link>
-            <Link href="/login" className="hover:text-[#1c1917]">
+            <Link href="/login" className="hover:text-[#0e2a30]">
               Sign in
             </Link>
           </div>

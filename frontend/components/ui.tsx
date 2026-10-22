@@ -32,7 +32,7 @@ export function PageHeader({
         {eyebrow ? <p className="eyebrow mb-2">{eyebrow}</p> : null}
         <h1 className="font-display text-3xl md:text-4xl">{title}</h1>
         {desc ? (
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#78716c]">
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#587279]">
             {desc}
           </p>
         ) : null}
@@ -46,22 +46,22 @@ export function PageHeader({
 
 /* Pill badge — classification + audit action types, ek hi mapping har page pe. */
 const TONES: Record<string, string> = {
-  Standard: "bg-[#d1fae5] text-[#047857]",
+  Standard: "bg-[#d1fae5] text-[#0e7c66]",
   "SMA-0": "bg-[#dbeafe] text-[#1d4ed8]",
   "SMA-1": "bg-[#fef3c7] text-[#92400e]",
   "SMA-2": "bg-[#ffedd5] text-[#9a3412]",
   NPA: "bg-[#fee2e2] text-[#b91c1c]",
-  COMPLIANT: "bg-[#d1fae5] text-[#047857]",
+  COMPLIANT: "bg-[#d1fae5] text-[#0e7c66]",
   GAP: "bg-[#fee2e2] text-[#b91c1c]",
   OUTDATED: "bg-[#fef3c7] text-[#92400e]",
   classification: "bg-[#dbeafe] text-[#1d4ed8]",
   gap_analysis: "bg-[#f3e8ff] text-[#7e22ce]",
-  scrape: "bg-[#d1fae5] text-[#047857]",
+  scrape: "bg-[#d1fae5] text-[#0e7c66]",
   monitor_check: "bg-[#fef3c7] text-[#92400e]",
 };
 
 export function Pill({ value }: { value: string }) {
-  const tone = TONES[value] ?? "bg-[#f5f0e8] text-[#78716c]";
+  const tone = TONES[value] ?? "bg-[#e9f2f0] text-[#587279]";
   return (
     <span
       className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${tone}`}
@@ -73,8 +73,8 @@ export function Pill({ value }: { value: string }) {
 
 export function Spinner({ label = "Loading…" }: { label?: string }) {
   return (
-    <div className="flex items-center justify-center gap-3 py-16 text-sm text-[#78716c]">
-      <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#e7e0d5] border-t-[#b45309]" />
+    <div className="flex items-center justify-center gap-3 py-16 text-sm text-[#587279]">
+      <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#d8e6e3] border-t-[#0b5563]" />
       {label}
     </div>
   );
@@ -93,7 +93,7 @@ export function EmptyState({
     <div className="panel panel-pad flex flex-col items-center px-6 py-14 text-center">
       <p className="font-display text-2xl">{title}</p>
       {desc ? (
-        <p className="mt-2 max-w-md text-sm text-[#78716c]">{desc}</p>
+        <p className="mt-2 max-w-md text-sm text-[#587279]">{desc}</p>
       ) : null}
       {action ? <div className="mt-6">{action}</div> : null}
     </div>

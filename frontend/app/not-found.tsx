@@ -8,7 +8,7 @@ export default function NotFound() {
         <h1 className="font-display text-5xl md:text-6xl">
           This page went missing.
         </h1>
-        <p className="mt-4 max-w-md text-[#78716c]">
+        <p className="mt-4 max-w-md text-[#587279]">
           The page you are looking for was never filed with the registry.
           The URL might be wrong, or the page may have been moved.
         </p>
@@ -20,7 +20,7 @@ export default function NotFound() {
             Landing page
           </Link>
         </div>
-        <p className="mono mt-10 text-xs text-[#a8a29e]">
+        <p className="mono mt-10 text-xs text-[#93a8ad]">
           status: 404 · registry: complynext · error: page_not_found
         </p>
       </div>

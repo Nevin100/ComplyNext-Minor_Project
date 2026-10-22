@@ -55,7 +55,7 @@ export default function SearchPage() {
       <Card className="mb-6">
         <form onSubmit={handleSearch} className="flex gap-2">
           <div className="relative flex-1">
-            <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#a8a29e]" />
+            <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#93a8ad]" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -90,7 +90,7 @@ export default function SearchPage() {
 
       {!loading && results.length > 0 && (
         <>
-          <p className="mono mb-4 text-xs text-[#a8a29e]">
+          <p className="mono mb-4 text-xs text-[#93a8ad]">
             {results.length} relevant passage{results.length === 1 ? "" : "s"}
           </p>
           <div className="space-y-4">
@@ -98,20 +98,20 @@ export default function SearchPage() {
               <Card key={`${r.source_name}-${r.chunk_index}-${i}`}>
                 <div className="flex items-center justify-between gap-3">
                   <p className="eyebrow">Passage {i + 1}</p>
-                  <p className="mono text-xs text-[#a8a29e]">
+                  <p className="mono text-xs text-[#93a8ad]">
                     chunk #{r.chunk_index}
                   </p>
                 </div>
-                <p className="mt-3 text-sm leading-relaxed text-[#57534e]">
+                <p className="mt-3 text-sm leading-relaxed text-[#47616a]">
                   {r.text}
                 </p>
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[#f0ebe1] pt-3">
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[#e6efed] pt-3">
                   <p className="text-xs font-medium">{r.source_name}</p>
                   <a
                     href={r.source_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="mono break-all text-xs text-[#b45309] underline underline-offset-4"
+                    className="mono break-all text-xs text-[#0b5563] underline underline-offset-4"
                   >
                     open source
                   </a>

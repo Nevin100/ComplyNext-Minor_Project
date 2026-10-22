@@ -4,16 +4,16 @@
    Paper background, serif display, amber-700 accent, mono data. */
 
 :root {
-  --bg: #faf7f1;
+  --bg: #f2f7f6;
   --panel: #ffffff;
-  --panel-2: #f5f0e8;
-  --border: #e7e0d5;
-  --ink: #1c1917;
-  --muted: #78716c;
-  --faint: #a8a29e;
-  --accent: #b45309;
-  --accent-soft: #fef3e2;
-  --up: #047857;
+  --panel-2: #e9f2f0;
+  --border: #d8e6e3;
+  --ink: #0e2a30;
+  --muted: #587279;
+  --faint: #93a8ad;
+  --accent: #0b5563;
+  --accent-soft: #e0f0ee;
+  --up: #0e7c66;
   --up-soft: #d1fae5;
   --down: #b91c1c;
   --down-soft: #fee2e2;
@@ -41,7 +41,7 @@ body {
 }
 
 ::selection {
-  background: rgba(180, 83, 9, 0.2);
+  background: rgba(11, 85, 99, 0.18);
 }
 
 * {
@@ -94,7 +94,7 @@ body {
   white-space: nowrap;
 }
 .btn-primary:hover {
-  background: #44403c;
+  background: #1d4550;
 }
 .btn-primary:active {
   transform: translateY(1px);
@@ -146,7 +146,7 @@ body {
   transition: border-color 0.15s ease;
 }
 .input::placeholder {
-  color: #b8b0a3;
+  color: #9db4b8;
 }
 .input:focus {
   outline: none;
@@ -192,7 +192,7 @@ select.input {
 }
 .status-dot.up {
   background: var(--up);
-  box-shadow: 0 0 8px rgba(4, 120, 87, 0.5);
+  box-shadow: 0 0 8px rgba(14, 124, 102, 0.5);
 }
 .status-dot.down {
   background: var(--down);
@@ -220,14 +220,14 @@ select.input {
 }
 .data-table tbody td {
   padding: 0.8rem 1rem;
-  border-bottom: 1px solid #f0ebe1;
+  border-bottom: 1px solid #e6efed;
   vertical-align: middle;
 }
 .data-table tbody tr:last-child td {
   border-bottom: none;
 }
 .data-table tbody tr:hover {
-  background: #faf8f3;
+  background: #f4faf9;
 }
 
 /* legacy: pages that wrap in .landing look identical */

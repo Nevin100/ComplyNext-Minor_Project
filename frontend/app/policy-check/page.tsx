@@ -145,15 +145,15 @@ export default function PolicyCheckPage() {
         <button
           onClick={() => fileRef.current?.click()}
           disabled={uploading}
-          className="flex w-full flex-col items-center gap-3 rounded-xl border-2 border-dashed border-[#e7e0d5] px-6 py-10 transition-colors hover:border-[#b45309] hover:bg-[#fef3e2]/40 disabled:opacity-50"
+          className="flex w-full flex-col items-center gap-3 rounded-xl border-2 border-dashed border-[#d8e6e3] px-6 py-10 transition-colors hover:border-[#0b5563] hover:bg-[#e0f0ee]/40 disabled:opacity-50"
         >
-          <UploadCloud className="h-8 w-8 text-[#b45309]" />
+          <UploadCloud className="h-8 w-8 text-[#0b5563]" />
           <span className="font-medium">
             {uploading
               ? "Uploading…"
               : "Drop a policy document, or click to browse"}
           </span>
-          <span className="mono text-xs text-[#a8a29e]">
+          <span className="mono text-xs text-[#93a8ad]">
             .txt · .pdf · one policy per file
           </span>
         </button>
@@ -176,22 +176,22 @@ export default function PolicyCheckPage() {
                   onClick={() => viewGaps(d.id)}
                   className={`w-full rounded-xl border p-3 text-left transition-colors ${
                     selected === d.id
-                      ? "border-[#b45309] bg-[#fef3e2]/50"
-                      : "border-[#e7e0d5] hover:border-[#a8a29e]"
+                      ? "border-[#0b5563] bg-[#e0f0ee]/50"
+                      : "border-[#d8e6e3] hover:border-[#93a8ad]"
                   }`}
                 >
                   <div className="flex items-start gap-2.5">
-                    <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#b45309]" />
+                    <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#0b5563]" />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">
                         {d.filename}
                       </p>
-                      <p className="mono mt-1 text-[11px] text-[#a8a29e]">
+                      <p className="mono mt-1 text-[11px] text-[#93a8ad]">
                         {new Date(d.uploaded_at).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
-                  <span className="mono mt-2 block text-xs text-[#b45309]">
+                  <span className="mono mt-2 block text-xs text-[#0b5563]">
                     view findings →
                   </span>
                 </button>
@@ -233,7 +233,7 @@ export default function PolicyCheckPage() {
               <div className="mb-4 flex flex-wrap items-center gap-3">
                 <h2 className="font-display text-2xl">Findings</h2>
                 <Pill value={gapCount > 0 ? "GAP" : "COMPLIANT"} />
-                <span className="mono text-xs text-[#a8a29e]">
+                <span className="mono text-xs text-[#93a8ad]">
                   {gapCount} gap{gapCount === 1 ? "" : "s"} ·{" "}
                   {gaps.length - gapCount} compliant
                 </span>
@@ -252,30 +252,30 @@ export default function PolicyCheckPage() {
                     className={
                       g.status === "GAP"
                         ? "border-l-4 !border-l-[#b91c1c]"
-                        : "border-l-4 !border-l-[#047857]"
+                        : "border-l-4 !border-l-[#0e7c66]"
                     }
                   >
                     <div className="flex items-center justify-between gap-3">
                       <Pill value={g.status} />
-                      <p className="mono text-xs text-[#a8a29e]">
+                      <p className="mono text-xs text-[#93a8ad]">
                         finding #{g.id}
                       </p>
                     </div>
-                    <blockquote className="mt-3 border-l-2 border-[#e7e0d5] pl-3 text-sm italic text-[#57534e]">
+                    <blockquote className="mt-3 border-l-2 border-[#d8e6e3] pl-3 text-sm italic text-[#47616a]">
                       “{g.policy_clause}”
                     </blockquote>
                     <p className="mt-3 text-sm leading-relaxed">
                       {g.explanation}
                     </p>
                     {(g.rbi_source_name || g.rbi_source_url) && (
-                      <div className="mono mt-3 border-t border-[#f0ebe1] pt-3 text-xs text-[#a8a29e]">
+                      <div className="mono mt-3 border-t border-[#e6efed] pt-3 text-xs text-[#93a8ad]">
                         <p>cited: {g.rbi_source_name ?? "RBI circular"}</p>
                         {g.rbi_source_url && (
                           <a
                             href={g.rbi_source_url}
                             target="_blank"
                             rel="noreferrer"
-                            className="break-all text-[#b45309] underline underline-offset-4"
+                            className="break-all text-[#0b5563] underline underline-offset-4"
                           >
                             {g.rbi_source_url}
                           </a>

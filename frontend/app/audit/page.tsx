@@ -133,13 +133,13 @@ export default function AuditPage() {
                       <td>
                         <Pill value={l.action_type} />
                       </td>
-                      <td className="max-w-[180px] truncate text-[#78716c]">
+                      <td className="max-w-[180px] truncate text-[#587279]">
                         {l.input_ref ?? "—"}
                       </td>
-                      <td className="max-w-[280px] truncate text-[#78716c]">
+                      <td className="max-w-[280px] truncate text-[#587279]">
                         {l.result_summary}
                       </td>
-                      <td className="mono max-w-[160px] truncate text-[#a8a29e]">
+                      <td className="mono max-w-[160px] truncate text-[#93a8ad]">
                         {l.rule_reference ?? "—"}
                       </td>
                     </tr>
@@ -150,7 +150,7 @@ export default function AuditPage() {
           </Card>
 
           <div className="mt-4 flex items-center justify-between">
-            <p className="mono text-xs text-[#a8a29e]">
+            <p className="mono text-xs text-[#93a8ad]">
               page {page + 1} of {pages} · {total} entries
             </p>
             <div className="flex gap-2">

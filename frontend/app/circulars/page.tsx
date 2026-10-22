@@ -151,7 +151,7 @@ export default function CircularsPage() {
       {/* change alerts */}
       <div className="mb-8">
         <div className="mb-3 flex items-center gap-2">
-          <BellRing className="h-4 w-4 text-[#b45309]" />
+          <BellRing className="h-4 w-4 text-[#0b5563]" />
           <h2 className="font-display text-2xl">Change alerts</h2>
           {unseen.length > 0 && (
             <span className="rounded-full bg-[#b91c1c] px-2.5 py-0.5 text-xs font-bold text-white">
@@ -168,18 +168,18 @@ export default function CircularsPage() {
         ) : (
           <div className="space-y-3">
             {unseen.map((a) => (
-              <Card key={a.id} className="border-l-4 !border-l-[#b45309]">
+              <Card key={a.id} className="border-l-4 !border-l-[#0b5563]">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
                     <p className="font-semibold">{a.source_name}</p>
                     {a.source_url && (
-                      <p className="mono mt-1 break-all text-xs text-[#a8a29e]">
+                      <p className="mono mt-1 break-all text-xs text-[#93a8ad]">
                         {a.source_url}
                       </p>
                     )}
-                    <p className="mt-2 text-sm text-[#78716c]">{a.summary}</p>
+                    <p className="mt-2 text-sm text-[#587279]">{a.summary}</p>
                     {a.detected_at && (
-                      <p className="mono mt-2 text-xs text-[#a8a29e]">
+                      <p className="mono mt-2 text-xs text-[#93a8ad]">
                         detected {new Date(a.detected_at).toLocaleString()}
                       </p>
                     )}
@@ -195,14 +195,14 @@ export default function CircularsPage() {
             ))}
             {seen.length > 0 && (
               <details>
-                <summary className="cursor-pointer text-sm text-[#78716c] hover:text-[#1c1917]">
+                <summary className="cursor-pointer text-sm text-[#587279] hover:text-[#0e2a30]">
                   {seen.length} acknowledged alert{seen.length === 1 ? "" : "s"}
                 </summary>
                 <div className="mt-3 space-y-3 opacity-70">
                   {seen.map((a) => (
                     <Card key={a.id}>
                       <p className="text-sm font-medium">{a.source_name}</p>
-                      <p className="mt-1 text-sm text-[#78716c]">{a.summary}</p>
+                      <p className="mt-1 text-sm text-[#587279]">{a.summary}</p>
                     </Card>
                   ))}
                 </div>
@@ -257,7 +257,7 @@ export default function CircularsPage() {
                         href={c.source_url}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-[#b45309] underline underline-offset-4 hover:text-[#92400e]"
+                        className="text-[#0b5563] underline underline-offset-4 hover:text-[#92400e]"
                       >
                         Open
                       </a>

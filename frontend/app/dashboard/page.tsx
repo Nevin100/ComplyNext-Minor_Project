@@ -106,21 +106,21 @@ export default function DashboardPage() {
           <Card>
             <p className="eyebrow">Loan accounts</p>
             <p className="font-display mt-2 text-4xl">{stats.loans}</p>
-            <p className="mt-1 text-sm text-[#78716c]">
+            <p className="mt-1 text-sm text-[#587279]">
               classified under IRACP norms
             </p>
           </Card>
           <Card>
             <p className="eyebrow">Policy documents</p>
             <p className="font-display mt-2 text-4xl">{stats.policies}</p>
-            <p className="mt-1 text-sm text-[#78716c]">
+            <p className="mt-1 text-sm text-[#587279]">
               uploaded for gap analysis
             </p>
           </Card>
           <Card>
             <p className="eyebrow">Regulatory corpus</p>
             <p className="font-display mt-2 text-4xl">{stats.circulars}</p>
-            <p className="mt-1 text-sm text-[#78716c]">
+            <p className="mt-1 text-sm text-[#587279]">
               circulars indexed · <span className="mono">{stats.alerts}</span>{" "}
               unseen alerts
             </p>
@@ -134,16 +134,16 @@ export default function DashboardPage() {
           const Icon = a.icon;
           return (
             <Link key={a.href} href={a.href}>
-              <Card className="group flex h-full items-start gap-4 transition-colors hover:border-[#a8a29e]">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#fef3e2] text-[#b45309]">
+              <Card className="group flex h-full items-start gap-4 transition-colors hover:border-[#93a8ad]">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#e0f0ee] text-[#0b5563]">
                   <Icon className="h-5 w-5" />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center justify-between gap-2">
                     <span className="font-semibold">{a.title}</span>
-                    <ArrowRight className="h-4 w-4 shrink-0 text-[#a8a29e] transition-transform group-hover:translate-x-1" />
+                    <ArrowRight className="h-4 w-4 shrink-0 text-[#93a8ad] transition-transform group-hover:translate-x-1" />
                   </span>
-                  <span className="mt-1 block text-sm leading-relaxed text-[#78716c]">
+                  <span className="mt-1 block text-sm leading-relaxed text-[#587279]">
                     {a.desc}
                   </span>
                 </span>
@@ -172,7 +172,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <div className="mono mt-8 text-xs text-[#a8a29e]">
+      <div className="mono mt-8 text-xs text-[#93a8ad]">
         session scoped to your institution ·{" "}
         <Pill value={stats && stats.alerts > 0 ? "GAP" : "COMPLIANT"} />{" "}
         regulatory posture

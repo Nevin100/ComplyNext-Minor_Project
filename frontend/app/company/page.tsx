@@ -113,11 +113,11 @@ export default function CompanyPage() {
               <div>
                 <p className="eyebrow mb-2">Registered entity</p>
                 <h2 className="font-display text-2xl">{company.name}</h2>
-                <p className="mono mt-2 text-xs text-[#a8a29e]">
+                <p className="mono mt-2 text-xs text-[#93a8ad]">
                   entity id: {company.id} · registered{" "}
                   {new Date(company.created_at).toLocaleDateString()}
                 </p>
-                <p className="mono mt-1 text-xs text-[#a8a29e]">
+                <p className="mono mt-1 text-xs text-[#93a8ad]">
                   {company.total_users} user(s) · {company.total_loan_accounts}{" "}
                   loan account(s)
                 </p>
@@ -161,9 +161,9 @@ export default function CompanyPage() {
           <Card>
             <p className="eyebrow mb-2">Data isolation</p>
             <h2 className="font-display text-2xl">Scoped to this entity</h2>
-            <p className="mt-2 text-sm leading-relaxed text-[#78716c]">
+            <p className="mt-2 text-sm leading-relaxed text-[#587279]">
               Loan books, policies, gap findings and audit logs all belong to{" "}
-              <span className="font-medium text-[#1c1917]">{company.name}</span>{" "}
+              <span className="font-medium text-[#0e2a30]">{company.name}</span>{" "}
               and to nobody else. The signed session token decides the scope
               — never the client.
             </p>
@@ -171,7 +171,7 @@ export default function CompanyPage() {
 
           <Card className="border-[#fca5a5] lg:col-span-2">
             <h2 className="font-display text-xl text-[#b91c1c]">Danger zone</h2>
-            <p className="mt-1.5 text-sm text-[#78716c]">
+            <p className="mt-1.5 text-sm text-[#587279]">
               Deleting the entity profile also removes its users and loan
               accounts. This action cannot be undone.
             </p>

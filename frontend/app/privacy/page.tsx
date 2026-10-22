@@ -64,17 +64,17 @@ const SECTIONS: { title: string; body: string[] }[] = [
 export default function PrivacyPage() {
   return (
     <div className="landing min-h-screen">
-      <header className="border-b border-[#e7e0d5]">
+      <header className="border-b border-[#d8e6e3]">
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2.5">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#1c1917] text-[#faf7f1]">
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#0e2a30] text-[#f2f7f6]">
               <ShieldCheck className="h-4 w-4" />
             </span>
             <span className="font-display text-xl">ComplyNext</span>
           </Link>
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-sm text-[#78716c] hover:text-[#1c1917]"
+            className="inline-flex items-center gap-1.5 text-sm text-[#587279] hover:text-[#0e2a30]"
           >
             <ArrowLeft className="h-4 w-4" />
             Home
@@ -85,7 +85,7 @@ export default function PrivacyPage() {
       <main className="mx-auto w-full max-w-3xl px-6 py-12 md:py-16">
         <p className="eyebrow mb-3">Legal</p>
         <h1 className="font-display text-4xl md:text-5xl">Privacy Policy</h1>
-        <p className="mono mt-3 text-xs text-[#a8a29e]">
+        <p className="mono mt-3 text-xs text-[#93a8ad]">
           Last updated: October 2026
         </p>
 
@@ -97,7 +97,7 @@ export default function PrivacyPage() {
                 {s.body.map((b, i) => (
                   <li
                     key={i}
-                    className="text-sm leading-relaxed text-[#57534e]"
+                    className="text-sm leading-relaxed text-[#47616a]"
                   >
                     {b}
                   </li>
@@ -107,9 +107,9 @@ export default function PrivacyPage() {
           ))}
         </div>
 
-        <footer className="mt-12 border-t border-[#e7e0d5] pt-6 text-center text-xs text-[#a8a29e]">
+        <footer className="mt-12 border-t border-[#d8e6e3] pt-6 text-center text-xs text-[#93a8ad]">
           © {new Date().getFullYear()} ComplyNext ·{" "}
-          <Link href="/" className="underline hover:text-[#1c1917]">
+          <Link href="/" className="underline hover:text-[#0e2a30]">
             Home
           </Link>
         </footer>
