@@ -24,96 +24,54 @@ Small and mid-sized NBFCs and co-operative banks struggle to keep internal polic
 
 RBI/NBFC Compliance Intelligence System — FastAPI backend + Next.js frontend.
 
+## Folder Structure
+
 ```text
-ComplyNext-Minor_Project/
-│
-├── README.md                        # project overview, setup and run instructions
-│
-├── backend/                         # FastAPI backend (Python 3.11+)
-│   ├── requirements.txt             # Python dependencies
-│   ├── pyproject.toml               # project configuration
-│   └── src/
-│       ├── api/                     # REST API routes (FastAPI routers)
-│       │   ├── main.py              # app entry point — routers, CORS, table creation on startup
-│       │   ├── auth_routes.py       # signup / login (JWT)
-│       │   ├── loan_routes.py       # loan CRUD + CSV bulk upload, classification run
-│       │   ├── circular_routes.py   # scrape circulars, list corpus, update checks
-│       │   ├── policy_routes.py     # policy upload + gap analysis trigger
-│       │   ├── audit_routes.py      # audit trail listing + PDF export
-│       │   └── company_routes.py    # institution (tenant) profile
-│       │
-│       ├── agents/                  # Policy Gap Detection — LangGraph multi-agent pipeline
-│       │   └── gap_graph.py         # retriever → comparer → explainer graph (Groq LLM)
-│       │
-│       ├── rules_engine/            # NPA classification
-│       │   └── npa_engine.py        # deterministic IRACP rule engine (DPD thresholds)
-│       │
-│       ├── scraper/                 # RBI circular ingestion
-│       │   └── rbi_scraper.py       # scrapes rbi.org.in circulars, splits into chunks
-│       │
-│       ├── embeddings/              # vector search (RAG)
-│       │   └── vector_store.py      # ChromaDB store + all-MiniLM-L6-v2 embeddings
-│       │
-│       ├── monitor/                 # circular change monitoring
-│       │   └── change_monitor.py    # SHA-256 snapshot comparison, runs every 12 hours
-│       │
-│       ├── db/                      # database layer (SQLAlchemy + SQLite)
-│       │   ├── database.py          # engine and session setup
-│       │   ├── models.py            # 9 tables — companies, users, loan_accounts, circulars,
-│       │   │                        #   policy_documents, gap_findings, audit_logs,
-│       │   │                        #   source_snapshots, change_alerts
-│       │   ├── init_db.py           # database initialisation
-│       │   └── seed_data.py         # demo seed data
-│       │
-│       ├── auth/                    # security
-│       │   ├── security.py          # password hashing + JWT token creation
-│       │   └── dependencies.py      # current-user guard — enforces tenant (company) scope
-│       │
-│       ├── schemas/                 # request / response models (Pydantic)
-│       │   ├── auth.py              #   signup / login payloads
-│       │   ├── loan.py              #   loan account payloads
-│       │   ├── circular.py          #   circular + change-alert responses
-│       │   ├── policy.py            #   policy document + gap finding responses
-│       │   ├── audit_logs.py        #   audit trail responses
-│       │   ├── company.py           #   institution profile responses
-│       │   └── search.py            #   semantic search responses
-│       │
-│       └── eval/                    # evaluation harness
-│           └── evaluate.py          # 25 hand-labelled NPA cases + 6 planted-gap policy clauses
-│
-└── frontend/                        # Next.js frontend (TypeScript, App Router)
-    ├── package.json                 # Node dependencies and scripts
-    ├── tsconfig.json                # TypeScript configuration
-    ├── next.config.ts               # Next.js configuration
-    │
-    ├── app/                         # pages
-    │   ├── page.tsx                 # landing page (public homepage)
-    │   ├── layout.tsx               # root layout — fonts + application shell
-    │   ├── globals.css              # design system (petrol-teal theme, CSS variables)
-    │   ├── (auth)/
-    │   │   ├── login/page.tsx       # sign in
-    │   │   └── signup/page.tsx      # create workspace (register institution)
-    │   ├── dashboard/page.tsx       # compliance overview (command centre)
-    │   ├── classify/page.tsx        # add loans, CSV bulk upload, run classification
-    │   ├── circulars/page.tsx       # indexed circulars + change alerts
-    │   ├── search/page.tsx          # regulatory semantic search ("Ask the corpus")
-    │   ├── policy-check/page.tsx    # upload policy, view gap findings with citations
-    │   ├── audit/page.tsx           # audit trail + PDF export
-    │   ├── company/page.tsx         # entity (institution) profile
-    │   ├── privacy/page.tsx         # privacy policy
-    │   ├── not-found.tsx            # 404 page
-    │   ├── robots.ts                # search-engine robots rules
-    │   └── sitemap.ts               # sitemap generation
-    │
-    ├── components/                  # shared UI components
-    │   ├── AppLayout.tsx            # sidebar shell (hides itself on public pages)
-    │   ├── Sidebar.tsx              # navigation sidebar + mobile drawer
-    │   ├── Navbar.tsx               # top navigation (public pages)
-    │   └── ui.tsx                   # shared primitives — Card, PageHeader, Pill, Spinner
-    │
-    └── lib/                         # frontend helpers
-        ├── api.ts                   # axios instance + JWT interceptor (NEXT_PUBLIC_API_URL)
-        └── auth.ts                  # logout helper
+backend/
+├── src/
+│   ├── api/                  # Route definitions
+│   │   ├── main.py           # App entrypoint, router registration, CORS, table creation
+│   │   ├── auth_routes.py    # /auth/*
+│   │   ├── loan_routes.py    # /api/loan-accounts/* + CSV bulk upload + classification
+│   │   ├── company_routes.py # /api/company/*
+│   │   ├── circular_routes.py# /api/circulars/*
+│   │   ├── policy_routes.py  # /api/policies/* — policy upload + gap analysis
+│   │   └── audit_routes.py   # /api/audit/* — audit trail + PDF export
+│   ├── auth/
+│   │   ├── security.py       # hash_password, verify_password, JWT create/decode
+│   │   └── dependencies.py   # get_current_user (HTTPBearer-based)
+│   ├── db/
+│   │   ├── database.py       # engine, SessionLocal, get_db, Base
+│   │   ├── models.py         # 9 tables — Company, User, LoanAccount, Circular, PolicyDocument,
+│   │   │                     #   GapFinding, AuditLog, SourceSnapshot, ChangeAlert
+│   │   ├── init_db.py        # creates tables — run once / after model changes
+│   │   └── seed_data.py      # seeds sample loan accounts across companies
+│   ├── rules_engine/
+│   │   └── npa_engine.py     # deterministic Standard/SMA-0/1/2/NPA classifier
+│   ├── scraper/
+│   │   └── rbi_scraper.py    # fetch → chunk → persist RBI circulars
+│   ├── embeddings/
+│   │   └── vector_store.py   # embed chunks, build/query ChromaDB collection
+│   ├── schemas/              # Pydantic request/response shapes
+│   │   ├── auth.py           # CompanySignup, UserLogin, Token, UserOut
+│   │   ├── loan.py           # LoanAccountCreate, LoanAccountUpdate, LoanAccountOut
+│   │   ├── company.py        # CompanyUpdate, CompanyOut
+│   │   ├── circular.py       # CircularSummary, ChangeAlertOut
+│   │   ├── policy.py         # PolicyDocumentOut, GapFindingOut, AnalyzeResponse
+│   │   ├── audit_logs.py     # AuditLogOut
+│   │   └── search.py         # CircularSearchResult
+│   ├── agents/               # Policy Gap Detection — LangGraph multi-agent pipeline
+│   │   └── gap_graph.py      # retriever → comparer → explainer (Groq llama-3.3-70b)
+│   ├── monitor/
+│   │   └── change_monitor.py # SHA-256 circular change monitor (every 12 hours)
+│   └── eval/
+│       └── evaluate.py       # 25 NPA test cases + 6 planted-gap clauses → eval_results.json
+├── data/                     # runtime data
+├── chroma_data/              # ChromaDB persistent storage (vectors)
+├── complynext.db             # SQLite database file
+├── .env                      # JWT_SECRET_KEY, JWT_ALGORITHM, GROQ_API_KEY
+├── requirements.txt
+└── pyproject.toml / uv.lock
 ```
 
 ## Current Features (Progress Report - Phase 2)
