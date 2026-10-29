@@ -1,0 +1,39 @@
+name: Deploy ComplyNext backend to ECS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy.yml'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::163680016607:role/DevDocAI-ECR-Push
+          aws-region: ap-south-1
+
+      - uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push image
+        run: |
+          IMAGE=163680016607.dkr.ecr.ap-south-1.amazonaws.com/complynext-backend:latest
+          docker build -t $IMAGE ./backend
+          docker push $IMAGE
+
+      - name: Update ECS service
+        run: |
+          aws ecs update-service \
+            --cluster <CLUSTER_NAME> \
+            --service complynext-backend-service \
+            --force-new-deployment \
+            --region ap-south-1
