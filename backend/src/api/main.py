@@ -34,7 +34,7 @@ app = FastAPI(title="ComplyNext API")
 # Without this, the browser blocks the request as a CORS violation.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://comply-next-minor-project.vercel.app"],
+    allow_origins=["http://localhost:3000", "https://comply-next-minor-project.vercel.app", "https://complynext.nevinbali.me"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
