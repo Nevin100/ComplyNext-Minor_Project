@@ -33,7 +33,7 @@ jobs:
       - name: Update ECS service
         run: |
           aws ecs update-service \
-            --cluster <CLUSTER_NAME> \
+            --cluster devdocai-cluster \
             --service complynext-backend-service \
             --force-new-deployment \
             --region ap-south-1
