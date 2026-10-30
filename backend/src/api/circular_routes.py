@@ -1,7 +1,7 @@
 """
 ComplyNext - Endpoint to list all scraped circulars (grouped, not per-chunk).
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func as sql_func
 
@@ -11,6 +11,7 @@ from src.schemas.circular import CircularSummary, ChangeAlertOut, CheckUpdatesRe
 from src.auth.dependencies import get_current_user
 from src.scraper.rbi_scraper import ingest_and_persist_all_sources, SOURCES
 from src.monitor.change_monitor import check_for_updates
+from src.embeddings.vector_store import build_vector_store
 from src.api.audit_routes import log_action
 
 router = APIRouter(prefix="/api/circulars", tags=["circulars"])
@@ -48,6 +49,7 @@ def list_circulars(
 
 @router.post("/scrape", status_code=202)
 def trigger_scrape(
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
@@ -59,6 +61,7 @@ def trigger_scrape(
     a background job queue (e.g. Celery) so the request returns instantly.
     """
     ingest_and_persist_all_sources()
+    background_tasks.add_task(build_vector_store)
     log_action(
         db,
         company_id=current_user["company_id"],
@@ -67,7 +70,7 @@ def trigger_scrape(
         result_summary="Circular scrape completed; corpus refreshed",
         rule_reference="rbi.org.in",
     )
-    return {"message": "Scraping completed. Check /api/circulars for updated data."}
+    return {"message": "Scraping completed. Vector store rebuild started in background; 2-3 minute rukkar phir Re-run analysis dabao."}
 
 @router.post("/check-updates", response_model=CheckUpdatesResponse)
 def check_updates(
