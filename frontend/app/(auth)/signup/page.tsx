@@ -92,13 +92,13 @@ export default function SignupPage() {
                 />
               </div>
               <div>
-                <label className="label" htmlFor="email">
+                <label className="label" htmlFor="admin_email">
                   Institutional email
                 </label>
                 <input
-                  id="email"
-                  type="email"
-                  name="email"
+                  id="admin_email"
+                  type="admin_email"
+                  name="admin_email"
                   placeholder="officer@yourbank.in"
                   value={form.admin_email}
                   onChange={handleChange}
@@ -108,14 +108,14 @@ export default function SignupPage() {
               </div>
               <div>
                 <label className="label" htmlFor="password">
-                  Password
+                  Admin Password
                 </label>
                 <div className="relative">
                   <input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    placeholder="Choose a strong password"
+                    id="admin_password"
+                    type={showPassword ? "text" : "admin_password"}
+                    name="admin_password"
+                    placeholder="Choose a strong admin password"
                     value={form.admin_password}
                     onChange={handleChange}
                     required
