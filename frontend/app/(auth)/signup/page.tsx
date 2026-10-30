@@ -11,9 +11,10 @@ export default function SignupPage() {
   const router = useRouter();
   const [form, setForm] = useState({
     company_name: "",
-    email: "",
-    password: "",
+    admin_email: "",
+    admin_password: "",
   });
+
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -99,7 +100,7 @@ export default function SignupPage() {
                   type="email"
                   name="email"
                   placeholder="officer@yourbank.in"
-                  value={form.email}
+                  value={form.admin_email}
                   onChange={handleChange}
                   required
                   className="input"
@@ -115,7 +116,7 @@ export default function SignupPage() {
                     type={showPassword ? "text" : "password"}
                     name="password"
                     placeholder="Choose a strong password"
-                    value={form.password}
+                    value={form.admin_password}
                     onChange={handleChange}
                     required
                     minLength={6}
